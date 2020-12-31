@@ -58,6 +58,7 @@ void TasksController::Start() {
         tasksControllerThread = std::thread(&TasksController::Loop, this);
     }
 }
+
 void TasksController::Stop() {
     if (!stop) {
         stop = true;

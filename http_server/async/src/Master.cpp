@@ -73,7 +73,6 @@ void Master::Stop() {  // Processes all existing connections
             msleep(120);
         }
         builder.Stop();
-
         while (!haveNoData.empty()) {
             msleep(120);
         }
@@ -82,7 +81,6 @@ void Master::Stop() {  // Processes all existing connections
         while (!haveData.empty()) {
             msleep(120);
         }
-
         for (Worker& worker : workers) {
             worker.Stop();
         }

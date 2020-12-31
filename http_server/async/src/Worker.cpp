@@ -67,10 +67,7 @@ void Worker::TakeNewTask() {
 void Worker::RunPreFunc() {
     if (state == TaskReceived) {
         state = PreFuncRunning;
-        auto func1 = currentTask.GetPreFunc();
-        func1 = currentTask.GetPreFunc();
-        auto func = currentTask.GetPreFunc()(headers, data, currentTask.GetInput());
-        currentTask.SetMainFunc(func);
+        currentTask.SetMainFunc(currentTask.GetPreFunc()(headers, data, currentTask.GetInput()));
         state = PreFuncRan;
     } else {
         throw std::runtime_error(std::string(
@@ -127,6 +124,5 @@ void Worker::Stop() {
 
         headers.clear();
         data.clear();
-
     }
 }
