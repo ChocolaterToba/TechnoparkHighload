@@ -4,6 +4,7 @@
 #include <netinet/in.h>    // struct sockaddr_in
 #include <cstring>
 #include <sys/socket.h>    // socket(), AF_INET/PF_INET
+#include <sys/ioctl.h>
 
 #include <iostream>
 #include <stdexcept>
@@ -346,9 +347,9 @@ std::vector<char> Socket::recvVectorLoop() {
 }
 
 bool Socket::hasData() {
-    char buf[1];
-    int n = ::recv(m_Sd, buf, sizeof(buf), MSG_PEEK);
-    return (n > 0);
+    int count;
+    ioctl(m_Sd, FIONREAD, &count);
+    return (count > 0);
 }
 
 void Socket::createServerSocket(uint32_t port,
