@@ -26,7 +26,9 @@ TasksController::~TasksController() {
 
 
 void TasksController::Loop() {
-    event_base_loop(haveNoDataEvents.get(), EVLOOP_NO_EXIT_ON_EMPTY);
+    while (!stop) {
+        event_base_loop(haveNoDataEvents.get(), EVLOOP_ONCE);
+    }
 }
 
 void TasksController::Start() {
@@ -39,7 +41,6 @@ void TasksController::Start() {
 void TasksController::Stop() {
     if (!stop) {
         stop = true;
-        event_base_loopbreak(haveNoDataEvents.get());
         tasksControllerThread.join();
     }
 }
