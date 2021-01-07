@@ -39,7 +39,7 @@ class Socket {
 
     bool hasData();
 
-    int getPort() { return port; }
+    int getPort() const { return port; }
 
     std::string recv();
     std::string recv(size_t bytes);

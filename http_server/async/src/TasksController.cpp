@@ -2,6 +2,7 @@
 #include <mutex>
 #include <thread>
 #include <memory>
+#include <event2/event.h>
 
 #include "msleep.hpp"
 
@@ -46,7 +47,11 @@ void TasksController::Stop() {
 }
 
 void TasksController::MoveTaskWrapper(evutil_socket_t fd, short events, void* ctx) {
-    (static_cast<TasksController*>(ctx))->MoveTask(fd);  // TODO: disconnection handling
+    if (events & EV_TIMEOUT) {
+        (static_cast<TasksController*>(ctx))->TimeoutTaskRemove(fd);
+    } else {
+        (static_cast<TasksController*>(ctx))->MoveTask(fd);
+    }
 }
 
 void TasksController::MoveTask(int sd) {
@@ -58,4 +63,10 @@ void TasksController::MoveTask(int sd) {
     haveDataMutex->lock();
     haveData.push(std::move(task));
     haveDataMutex->unlock();
+}
+
+void TasksController::TimeoutTaskRemove(int sd) {
+    haveNoDataMutex->lock();
+    haveNoData.erase(sd);  // automatically calls timeouted client's destructor
+    haveNoDataMutex->unlock();
 }

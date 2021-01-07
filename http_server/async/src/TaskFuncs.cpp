@@ -198,7 +198,7 @@ void PostProcess(map<string, string>& headers, vector<char>& body, HTTPClient& o
 static map<string, string> ProcessTemplatesInDB(const std::set<string>& params, size_t ID) {
     map<string, string> result_map;
 
-    string connection_string("host=localhost port=5432 dbname=db_woosh user=vk password=123");
+    string connection_string("host=localhost port=5432 dbname=db_woosh user=basic password=123");
     pqxx::connection con(connection_string.c_str());
 
     pqxx::work wrk(con);
@@ -254,7 +254,7 @@ static map<string, string> ProcessTemplatesInDB(const std::set<string>& params, 
 static map<string, string> ProcessTemplatesInDBIndex(const std::set<string> &params) {
     map<string, string> result_map;
 
-    string connection_string("host=localhost port=5432 dbname=db_woosh user=vk password=123");
+    string connection_string("host=localhost port=5432 dbname=db_woosh user=basic password=123");
     pqxx::connection con(connection_string.c_str());
 
     pqxx::work wrk(con);

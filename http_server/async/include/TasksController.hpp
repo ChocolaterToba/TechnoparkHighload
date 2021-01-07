@@ -23,6 +23,7 @@ class TasksController {
     bool stop;
 
     void MoveTask(int sd);
+    void TimeoutTaskRemove(int sd);
 
  public:
     TasksController(std::map<int, Task>& haveNoData,

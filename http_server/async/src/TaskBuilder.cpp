@@ -31,7 +31,7 @@ TaskBuilder::~TaskBuilder() {
 void TaskBuilder::CreateTasks() {
     while (!stop) {
         if (!unprocessedClients.empty())  {
-            //  TaskBuilder is singular, so there's no "queue shrinking" problem.
+            //  TaskBuilder is singular, so there's no "queue shrinking" problem. - fix, it's not necessarily true
             unprocessedClientsMutex->lock();
             Task newTask(unprocessedClients.front());
             unprocessedClients.pop();
@@ -39,8 +39,10 @@ void TaskBuilder::CreateTasks() {
 
             haveNoDataMutex->lock();
             haveNoData.emplace(newTask.GetInput().getSd(), newTask);
-            event_base_once(haveNoDataEvents.get(), newTask.GetInput().getSd(), EV_READ,
-                            &TasksController::MoveTaskWrapper, &tasksController, nullptr);
+
+            struct timeval timeout = {120, 0};  // TODO: optimise timeouts, remove magic number 120
+            event_base_once(haveNoDataEvents.get(), newTask.GetInput().getSd(), EV_TIMEOUT | EV_READ,
+                            &TasksController::MoveTaskWrapper, &tasksController, &timeout);  // TODO: async recv
             haveNoDataMutex->unlock();
         } else {
             msleep(30);
