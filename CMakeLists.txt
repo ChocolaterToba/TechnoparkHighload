@@ -56,9 +56,17 @@ file(GLOB ASYNC_SRC
      ${PROJECT_SOURCE_DIR}/http_server/async/src/Master.cpp)
 
 add_library(asyncServer STATIC ${ASYNC_SRC})
+
+# Add pkg-config functionality
+find_package(PkgConfig REQUIRED) 
+
+# search for libevent.pc
+pkg_search_module(EVENT REQUIRED libevent)
+
 target_include_directories(asyncServer PUBLIC
-                           ${PROJECT_SOURCE_DIR}/http_server/async/include)
-target_link_libraries(asyncServer client pthread http_message pqxx)
+                           ${PROJECT_SOURCE_DIR}/http_server/async/include
+                           ${EVENT_INCLUDE_DIRS})
+target_link_libraries(asyncServer client pthread http_message pqxx ${EVENT_LIBRARIES})
 ######################
 
 ################################

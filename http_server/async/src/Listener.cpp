@@ -2,6 +2,8 @@
 #include <mutex>
 #include <queue>
 #include <thread>
+#include <event2/event.h>
+
 #include "socket.hpp"
 #include "HTTPClient.hpp"
 #include "Listener.hpp"

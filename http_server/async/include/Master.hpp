@@ -4,6 +4,7 @@
 #include <vector>
 #include <queue>
 #include <map>
+#include <event2/event.h>
 
 #include "socket.hpp"
 #include "HTTPClient.hpp"
@@ -23,13 +24,17 @@ class Master {
 
     std::queue<HTTPClient> unprocessedClients;
     std::shared_ptr<std::mutex> unprocessedClientsMutex;
-    std::vector<Task> haveNoData;
+
+    std::map<int, Task> haveNoData;
+    std::shared_ptr<struct event_base> haveNoDataEvents;  //  TODO: write a wrapper for that
     std::shared_ptr<std::mutex> haveNoDataMutex;
-    TaskBuilder builder;
 
     std::queue<Task> haveData;
     std::shared_ptr<std::mutex> haveDataMutex;
+
     TasksController controller;
+
+    TaskBuilder builder;
 
     std::map<int, HTTPClient> pendingDBResponse;
     std::shared_ptr<std::mutex> pendingDBResponseMutex;

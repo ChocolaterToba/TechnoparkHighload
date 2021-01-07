@@ -15,16 +15,25 @@
 
 Master::Master(std::map<std::string, int>& ports, size_t workersAmount):
         ports(ports),
+
         unprocessedClients(),
         unprocessedClientsMutex(std::make_shared<std::mutex>()),
+
         haveNoData(),
+        haveNoDataEvents(event_base_new(), [](event_base* base) { event_base_free(base); }),
         haveNoDataMutex(std::make_shared<std::mutex>()),
-        builder(unprocessedClients, unprocessedClientsMutex,
-                haveNoData, haveNoDataMutex),
+
         haveData(),
         haveDataMutex(std::make_shared<std::mutex>()),
-        controller(haveNoData, haveNoDataMutex, haveData, haveDataMutex),
+
+        controller(haveNoData, haveNoDataEvents, haveNoDataMutex,
+                   haveData, haveDataMutex),
+
+        builder(unprocessedClients, unprocessedClientsMutex,
+                haveNoData, haveNoDataEvents, haveNoDataMutex, controller),
+
         pendingDBResponseMutex(std::make_shared<std::mutex>()),
+
         stop(true) {
             if (!workersAmount) {
                 throw std::runtime_error(std::string(
@@ -66,13 +75,14 @@ void Master::Stop() {  // Processes all existing connections
         stop = true;
 
         for (Listener& listener : listeners) {
-            listener.Stop();
+            listener.Stop();  // TODO: stop external listener first
         }
 
         while (!unprocessedClients.empty()) {
             msleep(120);
         }
         builder.Stop();
+
         while (!haveNoData.empty()) {
             msleep(120);
         }
