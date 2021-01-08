@@ -10,7 +10,7 @@
 #include "TasksController.hpp"
 
 TasksController::TasksController(std::map<int, Task>& haveNoData,
-                                 std::shared_ptr<struct event_base> haveNoDataEvents,
+                                 EventLoop<TasksController>& haveNoDataEvents,
                                  std::shared_ptr<std::mutex> haveNoDataMutex,
                                  std::queue<Task>& haveData,
                                  std::shared_ptr<std::mutex> haveDataMutex) :
@@ -18,32 +18,18 @@ TasksController::TasksController(std::map<int, Task>& haveNoData,
     haveNoDataEvents(haveNoDataEvents),
     haveNoDataMutex(haveNoDataMutex),
     haveData(haveData),
-    haveDataMutex(haveDataMutex),
-    stop(true) {}
+    haveDataMutex(haveDataMutex) {}
 
 TasksController::~TasksController() {
     Stop();
 }
 
-
-void TasksController::Loop() {
-    while (!stop) {
-        event_base_loop(haveNoDataEvents.get(), EVLOOP_ONCE);
-    }
-}
-
 void TasksController::Start() {
-    if (stop) {
-        stop = false;
-        tasksControllerThread = std::thread(&TasksController::Loop, this);
-    }
+    haveNoDataEvents.StartLoop();
 }
 
 void TasksController::Stop() {
-    if (!stop) {
-        stop = true;
-        tasksControllerThread.join();
-    }
+    haveNoDataEvents.StopLoop();
 }
 
 void TasksController::MoveTaskWrapper(evutil_socket_t fd, short events, void* ctx) {

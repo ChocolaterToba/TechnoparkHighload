@@ -7,6 +7,7 @@
 
 #include "socket.hpp"
 #include "HTTPClient.hpp"
+#include "EventLoop.hpp"
 #include "Task.hpp"
 #include "TaskBuilder.hpp"
 #include "TasksController.hpp"
@@ -20,8 +21,11 @@ Master::Master(std::map<std::string, int>& ports, size_t workersAmount):
         unprocessedClientsMutex(std::make_shared<std::mutex>()),
 
         haveNoData(),
-        haveNoDataEvents(event_base_new(), [](event_base* base) { event_base_free(base); }),
+        haveNoDataEvents(&TasksController::MoveTaskWrapper),
         haveNoDataMutex(std::make_shared<std::mutex>()),
+
+        builder(unprocessedClients, unprocessedClientsMutex,
+                haveNoData, haveNoDataEvents, haveNoDataMutex),
 
         haveData(),
         haveDataMutex(std::make_shared<std::mutex>()),
@@ -29,12 +33,20 @@ Master::Master(std::map<std::string, int>& ports, size_t workersAmount):
         controller(haveNoData, haveNoDataEvents, haveNoDataMutex,
                    haveData, haveDataMutex),
 
-        builder(unprocessedClients, unprocessedClientsMutex,
-                haveNoData, haveNoDataEvents, haveNoDataMutex, controller),
-
         pendingDBResponseMutex(std::make_shared<std::mutex>()),
 
         stop(true) {
+            if (ports.find("external") == ports.end()) {
+                throw std::runtime_error(std::string(
+                    "Master constructor: no \"external\" port given"
+                ));
+            }
+            for (auto& keyVal : ports) {
+                listeners.emplace_back(keyVal.second, unprocessedClients, unprocessedClientsMutex);
+            }
+
+            haveNoDataEvents.SetCallbackArgument(std::shared_ptr<TasksController>(&controller));
+
             if (!workersAmount) {
                 throw std::runtime_error(std::string(
                     "Master constructor: cannot construct master with no workers"
@@ -43,10 +55,6 @@ Master::Master(std::map<std::string, int>& ports, size_t workersAmount):
             for (size_t i = 0; i < workersAmount; ++i) {
                 workers.emplace_back(haveData, haveDataMutex,
                                      pendingDBResponse, pendingDBResponseMutex);
-            }
-
-            for (auto& keyVal : ports) {
-                listeners.emplace_back(keyVal.second, unprocessedClients, unprocessedClientsMutex);
             }
         }
 

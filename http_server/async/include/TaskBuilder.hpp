@@ -7,6 +7,7 @@
 #include <mutex>
 #include <event2/event.h>
 
+#include "EventLoop.hpp"
 #include "Task.hpp"
 #include "TasksController.hpp"
 
@@ -16,10 +17,8 @@ class TaskBuilder {
     std::shared_ptr<std::mutex> unprocessedClientsMutex;
 
     std::map<int, Task>& haveNoData;
-    std::shared_ptr<struct event_base> haveNoDataEvents;
+    EventLoop<TasksController>& haveNoDataEvents;
     std::shared_ptr<std::mutex> haveNoDataMutex;
-
-    TasksController& tasksController;
 
     virtual void CreateTasks();
 
@@ -30,9 +29,8 @@ class TaskBuilder {
     TaskBuilder(std::queue<HTTPClient>& unprocessedClients,
                 std::shared_ptr<std::mutex> unprocessedClientsMutex,
                 std::map<int, Task>& haveNoData,
-                std::shared_ptr<struct event_base> haveNoDataEvents,
-                std::shared_ptr<std::mutex> haveNoDataMutex,
-                TasksController& tasksController);
+                EventLoop<TasksController>& haveNoDataEvents,
+                std::shared_ptr<std::mutex> haveNoDataMutex);
     virtual ~TaskBuilder();
 
     virtual void Start();

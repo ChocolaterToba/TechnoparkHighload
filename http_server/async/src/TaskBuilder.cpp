@@ -6,6 +6,7 @@
 
 #include "msleep.hpp"
 
+#include "EventLoop.hpp"
 #include "Task.hpp"
 #include "TasksController.hpp"
 #include "TaskBuilder.hpp"
@@ -13,15 +14,13 @@
 TaskBuilder::TaskBuilder(std::queue<HTTPClient>& unprocessedClients,
                          std::shared_ptr<std::mutex> unprocessedClientsMutex,
                          std::map<int, Task>& haveNoData,
-                         std::shared_ptr<struct event_base> haveNoDataEvents,
-                         std::shared_ptr<std::mutex> haveNoDataMutex,
-                         TasksController& tasksController) :
+                         EventLoop<TasksController>& haveNoDataEvents,
+                         std::shared_ptr<std::mutex> haveNoDataMutex) :
     unprocessedClients(unprocessedClients),
     unprocessedClientsMutex(unprocessedClientsMutex),
     haveNoData(haveNoData),
     haveNoDataEvents(haveNoDataEvents),
     haveNoDataMutex(haveNoDataMutex),
-    tasksController(tasksController),
     stop(true) {}
 
 TaskBuilder::~TaskBuilder() {
@@ -39,10 +38,7 @@ void TaskBuilder::CreateTasks() {
 
             haveNoDataMutex->lock();
             haveNoData.emplace(newTask.GetInput().getSd(), newTask);
-
-            struct timeval timeout = {120, 0};  // TODO: optimise timeouts, remove magic number 120
-            event_base_once(haveNoDataEvents.get(), newTask.GetInput().getSd(), EV_TIMEOUT | EV_READ,
-                            &TasksController::MoveTaskWrapper, &tasksController, &timeout);  // TODO: async recv
+            haveNoDataEvents.AddEvent(newTask.GetInput().getSd());
             haveNoDataMutex->unlock();
         } else {
             msleep(30);
