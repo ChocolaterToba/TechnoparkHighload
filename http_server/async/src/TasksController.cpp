@@ -6,8 +6,11 @@
 
 #include "msleep.hpp"
 
+#include "CallbackPackage.hpp"
 #include "Task.hpp"
 #include "TasksController.hpp"
+
+typedef CallbackPackage<TasksController> ControllerPackage;  // rework?
 
 TasksController::TasksController(std::map<int, Task>& haveNoData,
                                  EventLoop<TasksController>& haveNoDataEvents,
@@ -33,11 +36,14 @@ void TasksController::Stop() {
 }
 
 void TasksController::MoveTaskWrapper(evutil_socket_t fd, short events, void* ctx) {
+    ControllerPackage* package = static_cast<ControllerPackage*>(ctx);
+    event_free(package->ev);  // also removes event from event loop, temporary
     if (events & EV_TIMEOUT) {
-        (static_cast<TasksController*>(ctx))->TimeoutTaskRemove(fd);
+        package->argument->TimeoutTaskRemove(fd);
     } else {
-        (static_cast<TasksController*>(ctx))->MoveTask(fd);
+        package->argument->MoveTask(fd);
     }
+    delete package;  // temporary
 }
 
 void TasksController::MoveTask(int sd) {

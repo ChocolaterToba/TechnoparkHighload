@@ -5,6 +5,8 @@
 #include <memory>
 #include <event2/event.h>
 
+#include "CallbackPackage.hpp"
+
 template <typename T>
 class EventLoop {
  private:
@@ -27,7 +29,7 @@ class EventLoop {
  public:
     EventLoop(event_callback_fn callback,
               std::shared_ptr<T> callbackArgument = std::shared_ptr<T>(),  // shared_ptr just for emptyness support
-              short eventFlags = EV_READ | EV_TIMEOUT,
+              short eventFlags = EV_READ | EV_TIMEOUT | EV_PERSIST,
               int timeout = 120) :
         base(event_base_new(), [](event_base* base) { event_base_free(base); }),
         baseMutex(),
@@ -51,10 +53,12 @@ class EventLoop {
     }
 
     void AddEvent(evutil_socket_t sd) {
+        struct event* ev = event_new(base.get(), sd, 0, nullptr, nullptr);
+        CallbackPackage<T>* package = new CallbackPackage<T>(callbackArgument, ev);  // maybe replace with smart ptr?
+        event_assign(ev, base.get(), sd, eventFlags, callback, package);
         struct timeval timeout = {this->timeout, 0};
         baseMutex.lock();
-        event_base_once(base.get(), sd, eventFlags,
-                        callback, callbackArgument.get(), &timeout);  // TODO: async recv
+        event_add(ev, &timeout);
         baseMutex.unlock();
     }
 
