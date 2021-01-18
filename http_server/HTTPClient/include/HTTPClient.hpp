@@ -18,7 +18,7 @@ class HTTPClient {
     std::vector<char>::iterator ParseBuffer(std::vector<char>& buf, std::string& result);
 
     bool receivedHeader;
-    size_t receivedBodySize;
+    size_t contentLength;
 
  public:
     explicit HTTPClient(std::shared_ptr<Socket> socket, int timeout);  // "We" are server
@@ -46,12 +46,13 @@ class HTTPClient {
     void SetHeader(std::string header) { this->header = std::move(header); }
     void SetBody(std::vector<char> body) { this->body = std::move(body); }
     void SetBody(std::queue<std::string>& bodyQueue, const std::string& separator = "|");
+    void SetContentLength(size_t contentLength) { this->contentLength = contentLength; }
 
     void RecvHeader();
-    void RecvBody(size_t contentLength);
+    void RecvBody();
 
     void RecvHeaderAsync();
-    bool RecvBodyAsync(size_t contentLength);
+    bool RecvBodyAsync();
 
     void Send(bool close = false);
     void Send(std::vector<char> data, bool close = false);

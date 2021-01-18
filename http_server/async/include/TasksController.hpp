@@ -19,6 +19,7 @@ class TasksController {
     std::queue<Task>& haveData;
     std::shared_ptr<std::mutex> haveDataMutex;
 
+    bool ReceiveInput(int sd);
     void MoveTask(int sd);
     void TimeoutTaskRemove(int sd);
 

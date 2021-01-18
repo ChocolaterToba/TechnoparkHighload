@@ -26,7 +26,7 @@ HTTPClient::HTTPClient(const std::string& host, int port) : HTTPClient() {
 HTTPClient::HTTPClient(std::shared_ptr<Socket> socket) :
             socket(socket),
             receivedHeader(false),
-            receivedBodySize(0) {}
+            contentLength(0) {}
 
 std::vector<char>::iterator HTTPClient::ParseBuffer(std::vector<char>& buffer, std::string& target) {
     // Returns true if '\0' was found, which means that binary body started.
@@ -185,9 +185,8 @@ void HTTPClient::RecvHeader() {
     body = std::move(temp);
 }
 
-void HTTPClient::RecvBody(size_t contentLength) {
-    contentLength -= body.size();
-    std::vector<char> receivedBody = std::move(socket->recvVector(contentLength));
+void HTTPClient::RecvBody() {
+    std::vector<char> receivedBody = std::move(socket->recvVector(contentLength - body.size()));
     body.insert(body.end(), receivedBody.begin(), receivedBody.end());
 
     std::cerr << "Received body, size: " << body.size() << " bytes" << std::endl;
@@ -233,7 +232,12 @@ void HTTPClient::RecvHeaderAsync() {
     body = std::move(temp);
 }
 
-bool HTTPClient::RecvBodyAsync(size_t contentLength) {
+bool HTTPClient::RecvBodyAsync() {
+    // Returns true if body is read successfully
+    if (body.size() >= contentLength) {  // maybe rework?
+        return true;
+    }
+
     std::vector<char> receivedBody = std::move(socket->recvVectorMax(contentLength - body.size()));
     body.insert(body.end(), receivedBody.begin(), receivedBody.end());
 

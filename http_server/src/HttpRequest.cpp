@@ -87,15 +87,21 @@ std::map<std::string, std::string> HttpRequest::GetAllHeaders() const {
     return headers;
 }
 
-int HttpRequest::GetContentLength() {
-    int result;
+size_t HttpRequest::GetContentLength() const {
+    int result = 0;
     try {
-        result = std::stoi(headers["Content-Length"]);
+        result = std::stoi(headers.at("Content-Length"));
+        if (result < 0) {
+            result = 0;
+        }
     }
     catch (std::invalid_argument &e) {
-        result = -1;
+        result = 0;
     }
-    return result;
+    catch (std::out_of_range& e) {
+        result = 0;
+    }
+    return static_cast<size_t>(result);
 }
 
 std::string HttpRequest::RequestMethodToString(RequestMethod method) {

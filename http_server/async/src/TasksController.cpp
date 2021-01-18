@@ -5,8 +5,12 @@
 #include <event2/event.h>
 
 #include "msleep.hpp"
+#include "ports.hpp"
 
 #include "CallbackPackage.hpp"
+#include "HTTPClient.hpp"
+#include "HttpRequest.hpp"
+#include "HttpResponseReader.hpp"
 #include "Task.hpp"
 #include "TasksController.hpp"
 
@@ -37,13 +41,41 @@ void TasksController::Stop() {
 
 void TasksController::MoveTaskWrapper(evutil_socket_t fd, short events, void* ctx) {
     ControllerPackage* package = static_cast<ControllerPackage*>(ctx);
-    event_free(package->ev);  // also removes event from event loop, temporary
     if (events & EV_TIMEOUT) {
+        event_free(package->ev);  // also removes event from event loop,
         package->argument->TimeoutTaskRemove(fd);
+        delete package;
     } else {
-        package->argument->MoveTask(fd);
+        if (package->argument->ReceiveInput(fd)) {
+            event_free(package->ev);
+            package->argument->MoveTask(fd);
+            delete package;
+        } 
     }
-    delete package;  // temporary
+}
+
+bool TasksController::ReceiveInput(int sd) {
+    haveNoDataMutex->lock();
+    HTTPClient& input = haveNoData.at(sd).GetInput();
+    haveNoDataMutex->unlock();
+
+    if (!input.ReceivedHeader()) {
+        input.RecvHeaderAsync();
+        if (!input.ReceivedHeader()) {
+            return false;
+        }
+
+        if (input.GetPort() == FROM_DB_PORT) {  // port FROM_DB_PORT is reserved for db's responses
+            HttpResponseReader response(input.GetHeader());
+            input.SetContentLength(response.GetContentLength());
+
+        } else {
+            HttpRequest request(input.GetHeader());
+            input.SetContentLength(request.GetContentLength());
+        }
+    }
+
+    return input.RecvBodyAsync();
 }
 
 void TasksController::MoveTask(int sd) {

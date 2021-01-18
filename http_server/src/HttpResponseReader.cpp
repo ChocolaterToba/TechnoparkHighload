@@ -25,11 +25,20 @@ std::map<std::string, std::string> HttpResponseReader::GetAllHeaders() const {
 }
 
 size_t HttpResponseReader::GetContentLength() const {
-    if (headers.contains("Content-Length")) {
-        return std::stoi(headers.at("Content-Length"));
-    } else {
-        return 0;
+    int result = 0;
+    try {
+        result = std::stoi(headers.at("Content-Length"));
+        if (result < 0) {
+            result = 0;
+        }
     }
+    catch (std::invalid_argument &e) {
+        result = 0;
+    }
+    catch (std::out_of_range& e) {
+        result = 0;
+    }
+    return static_cast<size_t>(result);
 }
 
 std::string HttpResponseReader::GetHeaderValue(const std::string &header_name) const {

@@ -40,6 +40,7 @@ class EventLoop {
         stop(true) {}
 
     ~EventLoop() {
+        // TODO: add package removal
         StopLoop();
     }
 

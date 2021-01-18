@@ -3,6 +3,7 @@
 #include <string>
 #include <fstream>
 #include <pqxx/pqxx>
+
 #include "ports.hpp"
 
 #include "HTTPClient.hpp"
@@ -19,17 +20,10 @@ using std::vector;
 
 
 MainFuncType PreProcess(map<string, string>& headers, vector<char>& body, HTTPClient& input) {
-    while (!input.ReceivedHeader()) {
-        input.RecvHeaderAsync();
-    }
-
-    int bodySize = 0;
-    headers.clear();
     if (input.GetPort() == FROM_DB_PORT) {  // port FROM_DB_PORT is reserved for db's responses
         HttpResponseReader response(input.GetHeader());
         headers = response.GetAllHeaders();
         headers["return_code"] = response.GetReturnCode();
-        bodySize = response.GetContentLength();
 
     } else {
         HttpRequest request(input.GetHeader());
@@ -37,14 +31,9 @@ MainFuncType PreProcess(map<string, string>& headers, vector<char>& body, HTTPCl
         headers["url"] = request.GetURL();
         headers["method"] = request.GetRequestMethodString();
         headers["http_version"] = request.GetHTTPVersion();
-        bodySize = request.GetContentLength();
     }
 
-    body.clear();
-    if (bodySize > 0) {
-        while (!input.RecvBodyAsync(bodySize));
-        body = input.GetBody();
-    }
+    body = input.GetBody();
 
     if (input.GetPort() == FROM_DB_PORT)
         return MainProcessDBReceived;
