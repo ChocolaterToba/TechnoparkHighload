@@ -52,6 +52,6 @@ void Task::SetOutput(HTTPClient& output) {
 }
 
 bool Task::HasData() {
-    return input->hasData();
+    return input->HasData();
 }
 

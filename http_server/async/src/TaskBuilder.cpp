@@ -37,8 +37,8 @@ void TaskBuilder::CreateTasks() {
             unprocessedClientsMutex->unlock();
 
             haveNoDataMutex->lock();
-            haveNoData.emplace(newTask.GetInput().getSd(), newTask);
-            haveNoDataEvents.AddEvent(newTask.GetInput().getSd());
+            haveNoData.emplace(newTask.GetInput().GetSd(), newTask);
+            haveNoDataEvents.AddEvent(newTask.GetInput().GetSd());
             haveNoDataMutex->unlock();
         } else {
             msleep(30);

@@ -19,18 +19,18 @@ using std::vector;
 
 
 MainFuncType PreProcess(map<string, string>& headers, vector<char>& body, HTTPClient& input) {
-    input.recvHeader();
+    input.RecvHeader();
 
     int bodySize = 0;
     headers.clear();
-    if (input.getPort() == FROM_DB_PORT) {  // port FROM_DB_PORT is reserved for db's responses
-        HttpResponseReader response(input.getHeader());
+    if (input.GetPort() == FROM_DB_PORT) {  // port FROM_DB_PORT is reserved for db's responses
+        HttpResponseReader response(input.GetHeader());
         headers = response.GetAllHeaders();
         headers["return_code"] = response.GetReturnCode();
         bodySize = response.GetContentLength();
 
     } else {
-        HttpRequest request(input.getHeader());
+        HttpRequest request(input.GetHeader());
         headers = request.GetAllHeaders();
         headers["url"] = request.GetURL();
         headers["method"] = request.GetRequestMethodString();
@@ -40,13 +40,13 @@ MainFuncType PreProcess(map<string, string>& headers, vector<char>& body, HTTPCl
 
     body.clear();
     if (bodySize > 0) {
-        input.recvBody(bodySize);
-        body = input.getBody();
+        input.RecvBody(bodySize);
+        body = input.GetBody();
     }
 
-    if (input.getPort() == FROM_DB_PORT)
+    if (input.GetPort() == FROM_DB_PORT)
         return MainProcessDBReceived;
-    else if (input.getPort() == TO_DB_PORT)
+    else if (input.GetPort() == TO_DB_PORT)
         return MainProcessDBServer;
     else
         return MainProcessBasic;
@@ -67,16 +67,16 @@ void MainProcessBasic(map<string, string>& headers, vector<char>& body,
 
         } else {
             pendingDBResponseMutex->lock();
-            pendingDBResponse.insert(std::pair<int, HTTPClient&>(input.getSd(), input));
+            pendingDBResponse.insert(std::pair<int, HTTPClient&>(input.GetSd(), input));
             pendingDBResponseMutex->unlock();
 
             headers["Connection"] = "close";  // maybe make headers from scratch???
 
             body.clear();
-            string sdString = std::to_string(input.getSd());
+            string sdString = std::to_string(input.GetSd());
             body.insert(body.end(), sdString.begin(), sdString.end());
             body.push_back('|');
-            vector<char> paramsPart = HTTPClient::mergeSetToVector(params);
+            vector<char> paramsPart = HTTPClient::MergeSetToVector(params);
             body.insert(body.end(), paramsPart.begin(), paramsPart.end());
 
             output = HTTPClient("localhost", TO_DB_PORT);
@@ -132,7 +132,7 @@ void MainProcessDBServer(map<string, string>& headers, vector<char>& body,
         params = ProcessTemplatesInDB(templateManager.GetParameterNames(), id);
     
     params["sd"] = string(body.begin(), firstSepPos);
-    body = HTTPClient::mergeMapToVector(params);
+    body = HTTPClient::MergeMapToVector(params);
 
     headers["return_code"] = "200 OK";
 
@@ -143,19 +143,19 @@ void MainProcessDBReceived(map<string, string>& headers, vector<char>& body,
                            map<int, HTTPClient>& pendingDBResponse,
                            std::shared_ptr<std::mutex> pendingDBResponseMutex,
                            HTTPClient& input, HTTPClient& output) {
-    map<string, string> bodyParams = HTTPClient::splitVectorToMap(body);
+    map<string, string> bodyParams = HTTPClient::SplitVectorToMap(body);
 
     int sd = std::stoi(bodyParams.at("sd"));
     bodyParams.erase("sd");
 
-    input.close();
+    input.Close();
 
     pendingDBResponseMutex->lock();
     output = pendingDBResponse.at(sd);
     pendingDBResponse.erase(sd);
     pendingDBResponseMutex->unlock();
 
-    HttpRequest initialRequest(output.getHeader());
+    HttpRequest initialRequest(output.GetHeader());
     map<string, string> newHeaders = initialRequest.GetAllHeaders();
     newHeaders["url"] = initialRequest.GetURL();
     newHeaders["method"] = initialRequest.GetRequestMethodString();
@@ -177,9 +177,9 @@ void PostProcess(map<string, string>& headers, vector<char>& body, HTTPClient& o
                                    body);
 
         if ((headers["http_version"] == "1.1" && headers["Conection"] != "close") || headers["Connection"] == "Keep-Alive")
-            output.send(request.GetRequest(), true);  // will fix later
+            output.Send(request.GetRequest(), true);  // will fix later
         else
-            output.send(request.GetRequest(), true);
+            output.Send(request.GetRequest(), true);
 
     } else {
         HttpResponse response(headers["http_version"],
@@ -188,9 +188,9 @@ void PostProcess(map<string, string>& headers, vector<char>& body, HTTPClient& o
                               (headers["Connection"] == "Keep-Alive"),
                               body);
         if ((headers["http_version"] == "1.1" && headers["Conection"] != "close") || headers["Connection"] == "Keep-Alive")
-            output.send(response.GetData(), true);  // will fix later
+            output.Send(response.GetData(), true);  // will fix later
         else
-            output.send(response.GetData(), true);
+            output.Send(response.GetData(), true);
     }
 }
 

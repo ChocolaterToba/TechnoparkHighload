@@ -10,26 +10,25 @@
 int BUFFER_SIZE = 256;
 
 
-HTTPClient::HTTPClient(std::shared_ptr<Socket> socket, int timeout) : socket(socket) {
+HTTPClient::HTTPClient(std::shared_ptr<Socket> socket, int timeout) : HTTPClient(socket) {
     socket->setRcvTimeout(/*sec*/ timeout, /*microsec*/ 0);
 }
 
-HTTPClient::HTTPClient(int port, int queueSize, int timeout) {
-    socket = std::make_shared<Socket>();
+HTTPClient::HTTPClient(int port, int queueSize, int timeout) : HTTPClient() {
     socket->createServerSocket(port, queueSize);
     socket->setRcvTimeout(/*sec*/ timeout, /*microsec*/ 0);
 }
 
-HTTPClient::HTTPClient(const std::string& host, int port) {
-    socket = std::make_shared<Socket>();
+HTTPClient::HTTPClient(const std::string& host, int port) : HTTPClient() {
     socket->connect(host, port);
 }
 
-HTTPClient::HTTPClient() {
-    socket = std::make_shared<Socket>();
-}
+HTTPClient::HTTPClient(std::shared_ptr<Socket> socket) :
+            socket(socket),
+            receivedHeader(false),
+            receivedBodySize(0) {}
 
-std::vector<char>::iterator HTTPClient::parseBuffer(std::vector<char>& buffer, std::string& target) {
+std::vector<char>::iterator HTTPClient::ParseBuffer(std::vector<char>& buffer, std::string& target) {
     // Returns true if '\0' was found, which means that binary body started.
     auto endlineIter = std::find(buffer.begin(), buffer.end(), '\0');
     target += std::string(buffer.begin(), endlineIter);
@@ -37,7 +36,7 @@ std::vector<char>::iterator HTTPClient::parseBuffer(std::vector<char>& buffer, s
     return endlineIter;
 }
 
-void HTTPClient::setBody(std::queue<std::string>& bodyQueue, const std::string& separator) {
+void HTTPClient::SetBody(std::queue<std::string>& bodyQueue, const std::string& separator) {
     body.clear();
     for (size_t i = 0; i < bodyQueue.size(); ++i) {
         std::string& str = bodyQueue.front();
@@ -52,11 +51,11 @@ void HTTPClient::setBody(std::queue<std::string>& bodyQueue, const std::string& 
     }
 }
 
-std::queue<std::string> HTTPClient::getBodyQueue(const std::string& separator) const {
-    return splitVectorToQueue(body, separator);
+std::queue<std::string> HTTPClient::GetBodyQueue(const std::string& separator) const {
+    return SplitVectorToQueue(body, separator);
 }
 
-std::queue<std::string> HTTPClient::splitVectorToQueue(const std::vector<char>& origin, const std::string& separator) {
+std::queue<std::string> HTTPClient::SplitVectorToQueue(const std::vector<char>& origin, const std::string& separator) {
     std::string bodyString(origin.begin(), origin.end());
     std::queue<std::string> result;
 
@@ -73,7 +72,7 @@ std::queue<std::string> HTTPClient::splitVectorToQueue(const std::vector<char>& 
     return result;
 }
 
-std::vector<char> HTTPClient::mergeQueueToVector(std::queue<std::string>& origin, const std::string& separator) {
+std::vector<char> HTTPClient::MergeQueueToVector(std::queue<std::string>& origin, const std::string& separator) {
     std::vector<char> result;
     for (size_t i = 0; i < origin.size(); ++i) {
         result.insert(result.end(), origin.front().begin(), origin.front().end());
@@ -85,7 +84,7 @@ std::vector<char> HTTPClient::mergeQueueToVector(std::queue<std::string>& origin
     return result;
 }
 
-std::set<std::string> HTTPClient::splitVectorToSet(const std::vector<char>& origin, const std::string& separator) {
+std::set<std::string> HTTPClient::SplitVectorToSet(const std::vector<char>& origin, const std::string& separator) {
     std::string bodyString(origin.begin(), origin.end());
     std::set<std::string> result;
 
@@ -102,7 +101,7 @@ std::set<std::string> HTTPClient::splitVectorToSet(const std::vector<char>& orig
     return result;
 }
 
-std::vector<char> HTTPClient::mergeSetToVector(const std::set<std::string>& origin, const std::string& separator) {
+std::vector<char> HTTPClient::MergeSetToVector(const std::set<std::string>& origin, const std::string& separator) {
     std::vector<char> result;
     for (auto& param : origin) {
         result.insert(result.end(), param.begin(), param.end());
@@ -112,7 +111,7 @@ std::vector<char> HTTPClient::mergeSetToVector(const std::set<std::string>& orig
     return result;
 }
 
-std::map<std::string, std::string> HTTPClient::splitVectorToMap(const std::vector<char>& origin, const std::string& separator, const std::string& pairSeparator) {
+std::map<std::string, std::string> HTTPClient::SplitVectorToMap(const std::vector<char>& origin, const std::string& separator, const std::string& pairSeparator) {
     std::string bodyString(origin.begin(), origin.end());
     std::map<std::string, std::string> result;
 
@@ -133,7 +132,7 @@ std::map<std::string, std::string> HTTPClient::splitVectorToMap(const std::vecto
     return result;
 }
 
-std::vector<char> HTTPClient::mergeMapToVector(std::map<std::string, std::string>& origin, const std::string& separator, const std::string& pairSeparator) {
+std::vector<char> HTTPClient::MergeMapToVector(std::map<std::string, std::string>& origin, const std::string& separator, const std::string& pairSeparator) {
     std::vector<char> result;
     for (auto& paramPair : origin) {
         result.insert(result.end(), paramPair.first.begin(), paramPair.first.end());
@@ -145,7 +144,7 @@ std::vector<char> HTTPClient::mergeMapToVector(std::map<std::string, std::string
     return result;
 }
 
-void HTTPClient::recvHeader() {
+void HTTPClient::RecvHeader() {
     header.clear();
     body.clear();
     std::string result;
@@ -156,7 +155,7 @@ void HTTPClient::recvHeader() {
            result.find("\n\n") == std::string::npos) {
         buffer = std::move(socket->recvVector());
 
-        auto endlineIter = parseBuffer(buffer, result);
+        auto endlineIter = ParseBuffer(buffer, result);
         if (endlineIter != buffer.end()) {  // if '\0' was in buffer
             binaryBodyStarted = true;
             body.insert(body.begin(), endlineIter, buffer.end());
@@ -186,7 +185,7 @@ void HTTPClient::recvHeader() {
     body = std::move(temp);
 }
 
-void HTTPClient::recvBody(size_t contentLength) {
+void HTTPClient::RecvBody(size_t contentLength) {
     contentLength -= body.size();
     std::vector<char> receivedBody = std::move(socket->recvVector(contentLength));
     body.insert(body.end(), receivedBody.begin(), receivedBody.end());
@@ -194,7 +193,18 @@ void HTTPClient::recvBody(size_t contentLength) {
     std::cerr << "Received body, size: " << body.size() << " bytes" << std::endl;
 }
 
-void HTTPClient::send(bool close) {
+void HTTPClient::RecvHeaderAsync() {}
+
+bool HTTPClient::RecvBodyAsync(size_t contentLength) {
+    // returns true if body is read till the end
+    return false;
+}
+
+bool HTTPClient::ReceivedHeader() {
+    return receivedHeader;
+}
+
+void HTTPClient::Send(bool close) {
     socket->send(header + "\r\n\r\n");
     socket->send(body);
     if (close) {
@@ -202,32 +212,33 @@ void HTTPClient::send(bool close) {
     }
 }
 
-void HTTPClient::send(std::vector<char> data, bool close) {
+void HTTPClient::Send(std::vector<char> data, bool close) {
     socket->send(std::move(data));
     if (close) {
         socket.reset();
     }
 }
 
-int HTTPClient::getPort() const {
+int HTTPClient::GetPort() const {
     if (socket != nullptr) {
         return socket->getPort();
     }
     return -1;
 }
 
-int HTTPClient::getSd() const {
+int HTTPClient::GetSd() const {
     if (socket != nullptr) {
         return socket->sd();
     }
     return -1;
 }
 
-void HTTPClient::clear() {
+void HTTPClient::Clear() {
     header.clear();
     body.clear();
 }
 
-void HTTPClient::close() {
+void HTTPClient::Close() {
     socket.reset();
+    // Clear();
 }
