@@ -48,6 +48,7 @@ class Socket {
 
     std::vector<char> recvVector();
     std::vector<char> recvVector(size_t bytes);
+    std::vector<char> recvVectorMax(size_t bytesMax);
     std::vector<char> recvVectorTimed(int timeout);
     std::vector<char> recvVectorLoop();
 

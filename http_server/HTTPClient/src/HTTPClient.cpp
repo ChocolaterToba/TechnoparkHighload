@@ -175,7 +175,7 @@ void HTTPClient::RecvHeader() {
 
     header = result.substr(0, bodyStartIndex + shift / 2);
 
-    std::cerr <<"Received header, size: " << body.size() << " bytes:" << std::endl
+    std::cerr <<"Received header, size: " << header.size() << " bytes:" << std::endl
               << header << std::endl;
 
     std::vector<char> temp(result.begin() + bodyStartIndex + shift, result.end());
@@ -193,11 +193,52 @@ void HTTPClient::RecvBody(size_t contentLength) {
     std::cerr << "Received body, size: " << body.size() << " bytes" << std::endl;
 }
 
-void HTTPClient::RecvHeaderAsync() {}
+void HTTPClient::RecvHeaderAsync() {
+    std::string result;
+    std::vector<char> buffer;
+
+    bool binaryBodyStarted = false;
+    buffer = std::move(socket->recvVector());
+
+    auto endlineIter = ParseBuffer(buffer, result);
+    if (endlineIter != buffer.end()) {  // if '\0' was in buffer
+        binaryBodyStarted = true;
+        body.insert(body.begin(), endlineIter, buffer.end());
+    }
+
+    size_t bodyStartIndex = result.find("\r\n\r\n");
+    size_t shift = 0;
+    if (bodyStartIndex != std::string::npos) {
+        shift = 4;
+        receivedHeader = true;
+    } else {
+        bodyStartIndex = result.find("\n\n");
+        if (bodyStartIndex != std::string::npos) {
+            shift = 2;
+            receivedHeader = true;
+        }
+    }
+
+    header.append(result.substr(0, bodyStartIndex + shift / 2));
+
+    std::cerr <<"Received header's part, size: " << header.size() << " bytes:" << std::endl;
+    if (receivedHeader) {
+        std::cout << header << std::endl;
+    }
+
+    std::vector<char> temp(result.begin() + bodyStartIndex + shift, result.end());
+    if (binaryBodyStarted) {
+        temp.insert(temp.end(), body.begin(), body.end());
+    }
+    body = std::move(temp);
+}
 
 bool HTTPClient::RecvBodyAsync(size_t contentLength) {
-    // returns true if body is read till the end
-    return false;
+    std::vector<char> receivedBody = std::move(socket->recvVectorMax(contentLength - body.size()));
+    body.insert(body.end(), receivedBody.begin(), receivedBody.end());
+
+    std::cerr << "Received body, size: " << body.size() << " bytes" << std::endl;
+    return body.size() == contentLength;
 }
 
 bool HTTPClient::ReceivedHeader() {
@@ -240,5 +281,5 @@ void HTTPClient::Clear() {
 
 void HTTPClient::Close() {
     socket.reset();
-    // Clear();
+    Clear();
 }

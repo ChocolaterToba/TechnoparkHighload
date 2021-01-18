@@ -19,7 +19,9 @@ using std::vector;
 
 
 MainFuncType PreProcess(map<string, string>& headers, vector<char>& body, HTTPClient& input) {
-    input.RecvHeader();
+    while (!input.ReceivedHeader()) {
+        input.RecvHeaderAsync();
+    }
 
     int bodySize = 0;
     headers.clear();
@@ -40,7 +42,7 @@ MainFuncType PreProcess(map<string, string>& headers, vector<char>& body, HTTPCl
 
     body.clear();
     if (bodySize > 0) {
-        input.RecvBody(bodySize);
+        while (!input.RecvBodyAsync(bodySize));
         body = input.GetBody();
     }
 

@@ -309,6 +309,20 @@ std::vector<char> Socket::recvVector(size_t bytes) {
     return ret;
 }
 
+std::vector<char> Socket::recvVectorMax(size_t bytesMax) {
+    int count;
+    ioctl(m_Sd, FIONREAD, &count);
+    if (count < 0) {
+        return std::vector<char>();
+    }
+
+    if (static_cast<size_t>(count) >= bytesMax) {
+        count = bytesMax;
+    }
+
+    return recvVector(count);
+}
+
 std::vector<char> Socket::recvVectorTimed(int timeout) {
     fd_set read_fds;
     FD_ZERO(&read_fds);
