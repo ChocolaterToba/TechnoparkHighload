@@ -7,6 +7,7 @@
 
 #include "socket.hpp"
 #include "HTTPClient.hpp"
+#include "EventLoop.hpp"
 #include "TaskBuilder.hpp"
 #include "TasksController.hpp"
 #include "Listener.hpp"
@@ -23,12 +24,16 @@ class Master {
 
     std::queue<HTTPClient> unprocessedClients;
     std::shared_ptr<std::mutex> unprocessedClientsMutex;
-    std::vector<Task> haveNoData;
+
+    std::map<int, Task> haveNoData;
+    EventLoop<TasksController> haveNoDataEvents;
     std::shared_ptr<std::mutex> haveNoDataMutex;
+
     TaskBuilder builder;
 
     std::queue<Task> haveData;
     std::shared_ptr<std::mutex> haveDataMutex;
+
     TasksController controller;
 
     std::map<int, HTTPClient> pendingDBResponse;

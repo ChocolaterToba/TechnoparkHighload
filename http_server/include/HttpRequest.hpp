@@ -27,7 +27,7 @@ class HttpRequest {
     RequestMethod GetRequestMethod() const;
     std::string GetRequestMethodString() const;
     std::map<std::string, std::string> GetAllHeaders() const;
-    int GetContentLength();
+    size_t GetContentLength() const;
 
     static std::string RequestMethodToString(RequestMethod method);
     static RequestMethod StringToRequestMethod(const std::string& methodString);

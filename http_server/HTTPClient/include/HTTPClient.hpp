@@ -15,46 +15,54 @@ class HTTPClient {
 
     std::shared_ptr<Socket> socket;
 
-    std::vector<char>::iterator parseBuffer(std::vector<char>& buf, std::string& result);
+    std::vector<char>::iterator ParseBuffer(std::vector<char>& buf, std::string& result);
+
+    bool receivedHeader;
+    size_t contentLength;
 
  public:
-    explicit HTTPClient(std::shared_ptr<Socket> socket, int timeout = 120);  // "We" are server
+    explicit HTTPClient(std::shared_ptr<Socket> socket, int timeout);  // "We" are server
     explicit HTTPClient(int port, int queueSize, int timeout = 120);  // "We" are server
     explicit HTTPClient(const std::string& host, int port);  // "We" are client
-    HTTPClient();
+    HTTPClient(std::shared_ptr<Socket> socket = std::make_shared<Socket>());
 
-    std::string getHeader() const { return header; }
-    std::vector<char> getBody() const { return body; }
-    std::queue<std::string> getBodyQueue(const std::string& separator = "|") const;
+    std::string GetHeader() const { return header; }
+    std::vector<char> GetBody() const { return body; }
+    std::queue<std::string> GetBodyQueue(const std::string& separator = "|") const;
 
-    static std::queue<std::string> splitVectorToQueue(const std::vector<char>& origin, const std::string& separator = "|");
-    static std::vector<char> mergeQueueToVector(std::queue<std::string>& origin, const std::string& separator = "|");
+    static std::queue<std::string> SplitVectorToQueue(const std::vector<char>& origin, const std::string& separator = "|");
+    static std::vector<char> MergeQueueToVector(std::queue<std::string>& origin, const std::string& separator = "|");
 
-    static std::set<std::string> splitVectorToSet(const std::vector<char>& origin, const std::string& separator = "|");
-    static std::vector<char> mergeSetToVector(const std::set<std::string>& origin, const std::string& separator = "|");
+    static std::set<std::string> SplitVectorToSet(const std::vector<char>& origin, const std::string& separator = "|");
+    static std::vector<char> MergeSetToVector(const std::set<std::string>& origin, const std::string& separator = "|");
 
-    static std::map<std::string, std::string> splitVectorToMap(const std::vector<char>& origin,
+    static std::map<std::string, std::string> SplitVectorToMap(const std::vector<char>& origin,
                                                                const std::string& separator = "|",
                                                                const std::string& pairSeparator = ": ");
-    static std::vector<char> mergeMapToVector(std::map<std::string, std::string>& origin,
+    static std::vector<char> MergeMapToVector(std::map<std::string, std::string>& origin,
                                               const std::string& separator = "|",
                                               const std::string& pairSeparator = ": ");
 
-    void setHeader(std::string header) { this->header = std::move(header); }
-    void setBody(std::vector<char> body) { this->body = std::move(body); }
-    void setBody(std::queue<std::string>& bodyQueue, const std::string& separator = "|");
+    void SetHeader(std::string header) { this->header = std::move(header); }
+    void SetBody(std::vector<char> body) { this->body = std::move(body); }
+    void SetBody(std::queue<std::string>& bodyQueue, const std::string& separator = "|");
+    void SetContentLength(size_t contentLength) { this->contentLength = contentLength; }
 
-    void recvHeader();
-    void recvBody(size_t contentLength);
+    void RecvHeader();
+    void RecvBody();
 
-    void send(bool close = false);
-    void send(std::vector<char> data, bool close = false);
+    void RecvHeaderAsync();
+    bool RecvBodyAsync();
 
-    bool hasData() const { return socket->hasData(); }
+    void Send(bool close = false);
+    void Send(std::vector<char> data, bool close = false);
 
-    int getPort() const;
-    int getSd() const;
+    bool HasData() const { return socket->hasData(); }
+    bool ReceivedHeader();
 
-    void clear();
-    void close();
+    int GetPort() const;
+    int GetSd() const;
+
+    void Clear();
+    void Close();
 };

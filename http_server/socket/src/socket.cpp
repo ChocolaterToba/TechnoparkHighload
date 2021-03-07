@@ -63,8 +63,8 @@ void set_non_blocked_impl(int sd, bool opt) {
 
 // Move semantics
 Socket::Socket(Socket&& other) :
-    port(other.port),
-    queue_size(other.queue_size) {
+        port(other.port),
+        queue_size(other.queue_size) {
     other.close();
     createServerSocket(port, queue_size);
 }
@@ -307,6 +307,20 @@ std::vector<char> Socket::recvVector(size_t bytes) {
     std::vector<char> ret(buf, buf + bytes);
     delete[] buf;
     return ret;
+}
+
+std::vector<char> Socket::recvVectorMax(size_t bytesMax) {
+    int count;
+    ioctl(m_Sd, FIONREAD, &count);
+    if (count < 0) {
+        return std::vector<char>();
+    }
+
+    if (static_cast<size_t>(count) >= bytesMax) {
+        count = bytesMax;
+    }
+
+    return recvVector(count);
 }
 
 std::vector<char> Socket::recvVectorTimed(int timeout) {

@@ -1,31 +1,39 @@
 #pragma once
 
 #include <queue>
-#include <vector>
+#include <map>
 #include <mutex>
 #include <thread>
 #include <memory>
+#include <event2/event.h>
+
+#include "EventLoop.hpp"
 #include "Task.hpp"
 
 class TasksController {
  protected:
-    std::vector<Task>& haveNoData;
+    std::map<int, Task>& haveNoData;
+    EventLoop<TasksController>& haveNoDataEvents;
     std::shared_ptr<std::mutex> haveNoDataMutex;
+
     std::queue<Task>& haveData;
     std::shared_ptr<std::mutex> haveDataMutex;
 
-    std::thread tasksControllerThread;
-    virtual void Loop();
-    bool stop;
+    bool ReceiveInput(int sd);
+    void MoveTask(int sd);
+    void TimeoutTaskRemove(int sd);
 
  public:
-    TasksController(std::vector<Task>& haveNoData,
+    TasksController(std::map<int, Task>& haveNoData,
+                    EventLoop<TasksController>& haveNoDataEvents,
                     std::shared_ptr<std::mutex> haveNoDataMutex,
                     std::queue<Task>& haveData,
                     std::shared_ptr<std::mutex> haveDataMutex);
 
-    virtual ~TasksController();
+    ~TasksController();
 
-    virtual void Start();
-    virtual void Stop();
+    void Start();
+    void Stop();
+
+    static void MoveTaskWrapper(evutil_socket_t fd, short events, void* ctx);
 };

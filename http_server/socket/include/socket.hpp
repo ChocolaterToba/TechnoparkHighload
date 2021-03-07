@@ -39,7 +39,7 @@ class Socket {
 
     bool hasData();
 
-    int getPort() { return port; }
+    int getPort() const { return port; }
 
     std::string recv();
     std::string recv(size_t bytes);
@@ -48,6 +48,7 @@ class Socket {
 
     std::vector<char> recvVector();
     std::vector<char> recvVector(size_t bytes);
+    std::vector<char> recvVectorMax(size_t bytesMax);
     std::vector<char> recvVectorTimed(int timeout);
     std::vector<char> recvVectorLoop();
 
