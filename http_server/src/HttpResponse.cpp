@@ -1,4 +1,3 @@
-#include <iostream>
 #include <string>
 #include <fstream>
 #include <vector>
@@ -9,6 +8,8 @@
 #include <set>
 #include <random>
 #include <chrono>
+
+#include <iostream>
 
 #include "date.h"
 
@@ -50,8 +51,8 @@ HttpResponse::HttpResponse(const std::string& HTTPVersion,
         }
     }
 
-    SetResponseBody(body);
     FormResponseHeader();
+    SetResponseBody(body);
     FormResponseData();
 }
 
@@ -124,9 +125,8 @@ void HttpResponse::SetContentType(ContentType type) {
             c_t_header.second = "application/x-shockwave-flash";
             break;
         default:
-            c_t_header.second = "unknown";
+            c_t_header.second = "undefined";
             break;
-            // throw UnknownContentTypeException();
     }
 
     headers.insert(c_t_header);

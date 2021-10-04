@@ -46,11 +46,17 @@ void TasksController::MoveTaskWrapper(evutil_socket_t fd, short events, void* ct
         package->argument->TimeoutTaskRemove(fd);
         delete package;
     } else {
-        if (package->argument->ReceiveInput(fd)) {
+        try {
+            if (package->argument->ReceiveInput(fd)) {
+                event_free(package->ev);
+                package->argument->MoveTask(fd);
+                delete package;
+            } 
+        } catch (const std::exception &e) {
             event_free(package->ev);
-            package->argument->MoveTask(fd);
             delete package;
-        } 
+            // std::cerr << e.what() << std::endl;
+        }
     }
 }
 

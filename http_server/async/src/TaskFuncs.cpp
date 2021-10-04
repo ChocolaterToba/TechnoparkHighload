@@ -30,6 +30,27 @@ MainFuncType PreProcess(map<string, string>& headers, vector<char>& body, HTTPCl
     return MainProcessBasic;
 }
 
+bool ReadFile(const std::string& filename, vector<char>& body, bool actuallyRead) {
+    std::ifstream file;
+    file.open(filename, std::ios::in | std::ios :: binary);
+
+    if (file.eof() || file.fail()) {
+        return false;
+    }
+
+    if (!actuallyRead) {
+        return true;
+    }
+
+    file.seekg(0, std::ios_base::end);
+    std::streampos fileSize = file.tellg();
+    body.resize(fileSize);
+
+    file.seekg(0, std::ios_base::beg);
+    file.read(&body[0], fileSize);
+    return true;
+}
+
 void MainProcessBasic(map<string, string>& headers, vector<char>& body,
                       HTTPClient& input, HTTPClient& output) {
     if (headers["method"] != "GET" && headers["method"] != "HEAD") {
@@ -47,27 +68,26 @@ void MainProcessBasic(map<string, string>& headers, vector<char>& body,
         filename = "index.html";
     }
 
-    // PROCESS these, write files to body
-
-    std::cout << path << std::endl;
-    std::cout << filename << std::endl;
-
-    headers["return_code"] = "200 OK";
+    bool fileRead = ReadFile(path + filename, body, headers["method"] == "GET");
+    if (fileRead) {
+        headers["return_code"] = "200 OK";
+    } else {
+        headers["return_code"] = "404 Not_Found";
+    }
     
-    output = std::move(input);  // just return what was sent
+    output = std::move(input);
 }
 
 void PostProcess(map<string, string>& headers, vector<char>& body, HTTPClient& output) {
     HttpResponse response(headers["http_version"],
-                         HttpRequest::StringToRequestMethod(headers["method"]),
-                         headers["url"],
-                         headers["return_code"],
-                         (headers["Connection"] == "Keep-Alive"),
-                         body);
+                          HttpRequest::StringToRequestMethod(headers["method"]),
+                          headers["url"],
+                          headers["return_code"],
+                          (headers["Connection"] == "Keep-Alive"),
+                          body);
     if ((headers["http_version"] == "1.1" && headers["Conection"] != "close") || headers["Connection"] == "Keep-Alive") {
         output.Send(response.GetData(), true);  // will fix later
     } else {
         output.Send(response.GetData(), true);
     }
-        
 }

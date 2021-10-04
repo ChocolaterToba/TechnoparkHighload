@@ -11,9 +11,10 @@
 int main(int argc, char* argv[]) {
     std::map<std::string, int> ports;
     ports["external"] = EXTERNAL_PORT;
-    setenv("DOCUMENT_ROOT", "CHANGE ME PLS/", 0);
+    setenv("DOCUMENT_ROOT", "./static/", 0); // TODO: parse from file
+    setenv("CPU_LIMIT", "4", 0); // TODO: parse from file
     try {
-        Master master(ports, 4);  // make dependant on cores' amount
+        Master master(ports, std::atoi(std::getenv("CPU_LIMIT")));  // make dependant on cores' amount
         master.Start();
         std::cout << std::endl
                   << "Starting server at http://127.0.0.1:" << EXTERNAL_PORT << "/" << std::endl

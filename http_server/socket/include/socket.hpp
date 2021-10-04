@@ -6,8 +6,6 @@
 #include <vector>
 #include <functional>
 
-#include <iostream>
-
 std::string int2ipv4(uint32_t ip);
 
 class Socket {

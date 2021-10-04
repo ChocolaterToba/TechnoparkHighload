@@ -1,5 +1,4 @@
 #include "HttpResponseReader.hpp"
-#include <iostream>
 
 HttpResponseReader::HttpResponseReader(const std::string &message) {
     return_code = GetReturnCode(message);
