@@ -33,52 +33,6 @@ MainFuncType PreProcess(map<string, string>& headers, vector<char>& body, HTTPCl
 void MainProcessBasic(map<string, string>& headers, vector<char>& body,
                       HTTPClient& input, HTTPClient& output) {
     // ADD MAIN LOGIC HERE
-
-
-
-    // ContentType type = HttpResponse::GetContentType(headers["url"]);
-    // if (type == TXT_HTML) {
-    //     TemplateManager templateManager(headers["url"]);
-    //     std::set<string> params = templateManager.GetParameterNames();
-    //     if (params.empty()) {
-    //         body = templateManager.GetHtmlFinal(map<string, string>());
-
-    //         output = std::move(input);
-
-    //     } else {
-    //         pendingDBResponseMutex->lock();
-    //         pendingDBResponse.insert(std::pair<int, HTTPClient&>(input.GetSd(), input));
-    //         pendingDBResponseMutex->unlock();
-
-    //         headers["Connection"] = "close";  // maybe make headers from scratch???
-
-    //         body.clear();
-    //         string sdString = std::to_string(input.GetSd());
-    //         body.insert(body.end(), sdString.begin(), sdString.end());
-    //         body.push_back('|');
-    //         vector<char> paramsPart = HTTPClient::MergeSetToVector(params);
-    //         body.insert(body.end(), paramsPart.begin(), paramsPart.end());
-
-    //         output = HTTPClient("localhost", TO_DB_PORT);
-    //         headers["proxy"] = "true";
-    //     }
-
-    // } else {
-    //     std::ifstream source("../static" + headers["url"], std::ios::binary);
-    //     if (source) {  // file was opened successfully
-    //         char buffer[BUF_SIZE] = {0};
-    //         while (source.read(buffer, BUF_SIZE))
-    //             body.insert(body.end(), buffer, buffer + BUF_SIZE);
-
-    //         body.insert(body.end(), buffer, buffer + source.gcount());
-    //         headers["return_code"] = "200 OK";
-    //     } else {
-    //         headers["return_code"] = "404 Not Found";
-    //     }
-    //     source.close();
-
-    //     output = std::move(input);
-    // }
     headers["return_code"] = "200 OK";
     output = std::move(input);  // just return what was sent
 }

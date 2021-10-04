@@ -1,2 +1,5 @@
-Live chat на TCP
-UML: https://app.creately.com/diagram/w2aES5wnkjo/edit
+$ mkdir build
+$ cd build
+$ cmake ..
+$ cmake build .
+$ sudo ./../output/server
