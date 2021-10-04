@@ -11,7 +11,6 @@
 #include "HttpResponse.hpp"
 #include "HttpRequestCreator.hpp"
 #include "HttpResponseReader.hpp"
-#include "TemplateManager.hpp"
 #include "TaskFuncs.hpp"
 
 using std::string;
@@ -80,30 +79,18 @@ void MainProcessBasic(map<string, string>& headers, vector<char>& body,
 
     //     output = std::move(input);
     // }
+    headers["return_code"] = "200 OK";
+    output = std::move(input);  // just return what was sent
 }
 
 void PostProcess(map<string, string>& headers, vector<char>& body, HTTPClient& output) {
-    if (headers["proxy"] == "true") {  // Meaning, we need to call another server
-        HttpRequestCreator request(headers["http_version"],
-                                   HttpRequestCreator::StringToRequestMethod(headers["method"]),
-                                   headers["url"],
-                                   (headers["Connection"] == "Keep-Alive"),
-                                   body);
-
-        if ((headers["http_version"] == "1.1" && headers["Conection"] != "close") || headers["Connection"] == "Keep-Alive")
-            output.Send(request.GetRequest(), true);  // will fix later
-        else
-            output.Send(request.GetRequest(), true);
-
-    } else {
-        HttpResponse response(headers["http_version"],
-                              HttpRequest::StringToRequestMethod(headers["method"]),
-                              headers["return_code"],
-                              (headers["Connection"] == "Keep-Alive"),
-                              body);
-        if ((headers["http_version"] == "1.1" && headers["Conection"] != "close") || headers["Connection"] == "Keep-Alive")
-            output.Send(response.GetData(), true);  // will fix later
-        else
-            output.Send(response.GetData(), true);
-    }
+    HttpResponse response(headers["http_version"],
+                         HttpRequest::StringToRequestMethod(headers["method"]),
+                         headers["return_code"],
+                         (headers["Connection"] == "Keep-Alive"),
+                         body);
+    if ((headers["http_version"] == "1.1" && headers["Conection"] != "close") || headers["Connection"] == "Keep-Alive")
+        output.Send(response.GetData(), true);  // will fix later
+    else
+        output.Send(response.GetData(), true);
 }

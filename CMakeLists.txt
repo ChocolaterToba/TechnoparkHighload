@@ -16,8 +16,7 @@ add_library(http_message STATIC
             ${PROJECT_SOURCE_DIR}/http_server/src/HttpResponse.cpp
             ${PROJECT_SOURCE_DIR}/http_server/src/HttpRequest.cpp
             ${PROJECT_SOURCE_DIR}/http_server/src/HttpResponseReader.cpp
-            ${PROJECT_SOURCE_DIR}/http_server/src/HttpRequestCreator.cpp
-            ${PROJECT_SOURCE_DIR}/http_server/src/TemplateManager.cpp)
+            ${PROJECT_SOURCE_DIR}/http_server/src/HttpRequestCreator.cpp)
 
 
 add_executable(server ${PROJECT_SOURCE_DIR}/http_server/src/main.cpp)
