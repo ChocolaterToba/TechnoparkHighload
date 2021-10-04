@@ -38,8 +38,14 @@ void MainProcessBasic(map<string, string>& headers, vector<char>& body,
         return;
     }
 
-    std::string filename(headers["url"].c_str() + headers["url"].rfind('/') + 1);
-    std::string path(headers["url"].c_str() + 1, headers["url"].rfind('/'));
+    int finalSlashPos = headers["url"].rfind('/');
+    std::string filename(headers["url"].c_str() + finalSlashPos + 1);
+    std::string path = std::string(std::getenv("DOCUMENT_ROOT")) +
+        std::string(headers["url"].c_str() + 1, finalSlashPos);
+
+    if (filename == "") {
+        filename = "index.html";
+    }
 
     // PROCESS these, write files to body
 

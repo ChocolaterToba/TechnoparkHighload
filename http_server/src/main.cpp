@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -8,9 +9,10 @@
 #include "Master.hpp"
 
 int main(int argc, char* argv[]) {
+    std::map<std::string, int> ports;
+    ports["external"] = EXTERNAL_PORT;
+    setenv("DOCUMENT_ROOT", "CHANGE ME PLS/", 0);
     try {
-        std::map<std::string, int> ports;
-        ports["external"] = EXTERNAL_PORT;
         Master master(ports, 4);  // make dependant on cores' amount
         master.Start();
         std::cout << std::endl

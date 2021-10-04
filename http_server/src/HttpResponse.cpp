@@ -72,6 +72,10 @@ ContentType HttpResponse::GetContentType(const std::string& url) {
         case hash("png"):
         case hash("PNG"):
             return IMG_PNG;
+        case hash("gif"):
+            return IMG_GIF;
+        case hash("swf"):
+            return ADOBE_SWF;
         case hash("txt"):
         case hash("TXT"):
             return TXT_PLAIN;
@@ -81,8 +85,6 @@ ContentType HttpResponse::GetContentType(const std::string& url) {
             return TXT_CSS;
         case hash("js"):
             return TXT_JS;
-        case hash("mp4"):
-            return VID_MP4;
         default:
             return UNDEF;
     }
@@ -115,8 +117,11 @@ void HttpResponse::SetContentType(ContentType type) {
         case IMG_PNG:
             c_t_header.second = "image/png";
             break;
-        case VID_MP4:
-            c_t_header.second = "video/mp4";
+        case IMG_GIF:
+            c_t_header.second = "image/gif";
+            break;
+        case ADOBE_SWF:
+            c_t_header.second = "application/x-shockwave-flash";
             break;
         default:
             c_t_header.second = "unknown";

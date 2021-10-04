@@ -8,5 +8,6 @@ typedef enum {
     TXT_JS,
     IMG_JPG,
     IMG_PNG,
-    VID_MP4,
+    IMG_GIF,
+    ADOBE_SWF,
 } ContentType;
