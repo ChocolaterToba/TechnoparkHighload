@@ -65,14 +65,8 @@ bool TasksController::ReceiveInput(int sd) {
             return false;
         }
 
-        if (input.GetPort() == FROM_DB_PORT) {  // port FROM_DB_PORT is reserved for db's responses
-            HttpResponseReader response(input.GetHeader());
-            input.SetContentLength(response.GetContentLength());
-
-        } else {
-            HttpRequest request(input.GetHeader());
-            input.SetContentLength(request.GetContentLength());
-        }
+        HttpRequest request(input.GetHeader());
+        input.SetContentLength(request.GetContentLength());
     }
 
     return input.RecvBodyAsync();

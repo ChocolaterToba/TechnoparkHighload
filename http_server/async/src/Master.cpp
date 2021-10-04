@@ -33,8 +33,6 @@ Master::Master(std::map<std::string, int>& ports, size_t workersAmount):
         controller(haveNoData, haveNoDataEvents, haveNoDataMutex,
                    haveData, haveDataMutex),
 
-        pendingDBResponseMutex(std::make_shared<std::mutex>()),
-
         stop(true) {
             if (ports.find("external") == ports.end()) {
                 throw std::runtime_error(std::string(
@@ -53,8 +51,7 @@ Master::Master(std::map<std::string, int>& ports, size_t workersAmount):
                 ));
             }
             for (size_t i = 0; i < workersAmount; ++i) {
-                workers.emplace_back(haveData, haveDataMutex,
-                                     pendingDBResponse, pendingDBResponseMutex);
+                workers.emplace_back(haveData, haveDataMutex);
             }
         }
 

@@ -8,7 +8,6 @@
 #include "HTTPClient.hpp"
 
 typedef std::function<void(std::map<std::string, std::string>&, std::vector<char>&,
-                           std::map<int, HTTPClient>&, std::shared_ptr<std::mutex>,
                            HTTPClient&, HTTPClient&)> MainFuncType;
 typedef std::function<MainFuncType
                       (std::map<std::string, std::string>&,
@@ -24,10 +23,6 @@ class Task {
     MainFuncType mainFunc;
     PostFuncType postFunc;
 
-    // If we use something other that HTTP
-    // as a protocol (like for DB connection)
-    // then HTTPClient needs to be replaced with Client
-    // which will be client abstraction.
     std::shared_ptr<HTTPClient> input;
     std::shared_ptr<HTTPClient> output;
 

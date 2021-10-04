@@ -11,19 +11,14 @@
 #include "Task.hpp"
 
 Worker::Worker(std::queue<Task>& tasks,
-               std::shared_ptr<std::mutex> tasksMutex,
-               std::map<int, HTTPClient>& pendingDBResponse,
-               std::shared_ptr<std::mutex> pendingDBResponseMutex) :
+               std::shared_ptr<std::mutex> tasksMutex) :
         tasks(tasks),
         tasksMutex(tasksMutex),
-        pendingDBResponse(pendingDBResponse),
-        pendingDBResponseMutex(pendingDBResponseMutex),
         state(NoTask),
         stop(true) {}
 
 Worker::Worker(Worker&& other) :
-        Worker(other.tasks, other.tasksMutex,
-               other.pendingDBResponse, other.pendingDBResponseMutex) {
+        Worker(other.tasks, other.tasksMutex) {
     other.Stop();
 }
 
@@ -78,8 +73,6 @@ void Worker::RunMainFunc() {
     if (state == PreFuncRan) {
         state = MainFuncRunning;
         currentTask.GetMainFunc()(headers, data,
-                                  pendingDBResponse,
-                                  pendingDBResponseMutex,
                                   currentTask.GetInput(),
                                   currentTask.GetOutput());
         state = MainFuncRan;
