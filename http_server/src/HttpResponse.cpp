@@ -51,8 +51,8 @@ HttpResponse::HttpResponse(const std::string& HTTPVersion,
         }
     }
 
-    FormResponseHeader();
     SetResponseBody(body);
+    FormResponseHeader();
     FormResponseData();
 }
 
@@ -66,10 +66,11 @@ ContentType HttpResponse::GetContentType(const std::string& url) {
         case hash("/"):
             return TXT_HTML;
         case hash("jpg"):
-        case hash("jpeg"):
         case hash("JPG"):
-        case hash("JPEG"):
             return IMG_JPG;
+        case hash("jpeg"):
+        case hash("JPEG"):
+            return IMG_JPEG;
         case hash("png"):
         case hash("PNG"):
             return IMG_PNG;
@@ -113,6 +114,9 @@ void HttpResponse::SetContentType(ContentType type) {
             c_t_header.second = "text/plain";
             break;
         case IMG_JPG:
+            c_t_header.second = "image/jpg";
+            break;
+        case IMG_JPEG:
             c_t_header.second = "image/jpeg";
             break;
         case IMG_PNG:

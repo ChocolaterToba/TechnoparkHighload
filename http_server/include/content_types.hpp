@@ -7,6 +7,7 @@ typedef enum {
     TXT_CSS,
     TXT_JS,
     IMG_JPG,
+    IMG_JPEG,
     IMG_PNG,
     IMG_GIF,
     ADOBE_SWF,
