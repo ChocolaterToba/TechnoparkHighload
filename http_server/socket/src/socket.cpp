@@ -38,7 +38,7 @@ struct sockaddr_in resolve(const char* host, int port) {
         rimap_local_ip_ptr[1] = ipf[1];
         rimap_local_ip_ptr[2] = ipf[2];
         rimap_local_ip_ptr[3] = ipf[3];
-        std::cerr << "resolved: " << int2ipv4(cur_interface_ip) << std::endl;
+        // std::cerr << "resolved: " << int2ipv4(cur_interface_ip) << std::endl;
         ++pAddr;
     }
 
@@ -203,8 +203,8 @@ std::string Socket::recv() {
     }
 
     std::string ret(buf, buf + n);
-    std::cerr << "client: " << m_Sd << ", recv: " << std::endl
-              << ret << " [" << n << " bytes]" << std::endl;
+    // std::cerr << "client: " << m_Sd << ", recv: " << std::endl
+    //           << ret << " [" << n << " bytes]" << std::endl;
     return ret;
 }
 
@@ -285,9 +285,9 @@ std::vector<char> Socket::recvVector() {
     }
 
     std::vector<char> ret(buf, buf + n);
-    std::cerr << "client: " << m_Sd << ", recv: " << std::endl
-              << "[may be binary file, cannot be displayed]"
-              << " [" << n << " bytes]" << std::endl;
+    // std::cerr << "client: " << m_Sd << ", recv: " << std::endl
+    //           << "[may be binary file, cannot be displayed]"
+    //           << " [" << n << " bytes]" << std::endl;
     return ret;
 }
 
@@ -399,14 +399,14 @@ std::shared_ptr<Socket> Socket::accept() {
     memset(&client, 0, sizeof(client));
     socklen_t cli_len = sizeof(client);
 
-    std::cerr << "ready to accept new clients, port: " << this->port << std::endl;
+    // std::cerr << "ready to accept new clients, port: " << this->port << std::endl;
     int cli_sd = ::accept(m_Sd, (struct sockaddr*)&client, &cli_len);
     if (-1 == cli_sd) {
         return std::shared_ptr<Socket>();
     }
 
-    std::cerr << "new client: " << cli_sd
-              << ", from: " << int2ipv4(client.sin_addr.s_addr) << std::endl;
+    // std::cerr << "new client: " << cli_sd
+    //           << ", from: " << int2ipv4(client.sin_addr.s_addr) << std::endl;
 
     return std::make_shared<Socket>(cli_sd, this->port);
 }
@@ -415,6 +415,6 @@ void Socket::httpQuery(const std::string& query,
                        std::function<void(const std::string& s)> cb) {
     send(query);
     std::string res = recvLoop();
-    std::cerr << "client: " << m_Sd << ", recv: \n" << res << std::endl;
+    // std::cerr << "client: " << m_Sd << ", recv: \n" << res << std::endl;
     cb(res);
 }

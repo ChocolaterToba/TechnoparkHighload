@@ -10,6 +10,8 @@
 #include <random>
 #include <chrono>
 
+#include "date.h"
+
 
 #include "HttpResponse.hpp"
 #include "HttpRequest.hpp"
@@ -29,10 +31,12 @@ std::vector<char> HttpResponse::GetData() const {
 
 HttpResponse::HttpResponse(const std::string& HTTPVersion,
                            RequestMethod reqType,
+                           const std::string& url,
                            const std::string& returnCode,
                            bool keepAlive,
                            const std::vector<char>& body) :
               http_version(HTTPVersion),
+              url(url),
               return_code(returnCode),
               keep_alive(keepAlive) {
     if (HTTPVersion.empty()) {
@@ -51,28 +55,36 @@ HttpResponse::HttpResponse(const std::string& HTTPVersion,
     FormResponseData();
 }
 
-ContentType HttpResponse::GetContentType(const std::string& url) {
-    std::string ext(url.c_str() + url.rfind('.') + 1);
-    if (ext.rfind("/") == 0) {  // temporary
-        return TXT_HTML;
+constexpr unsigned int hash(const char *s, int off = 0) {                        
+    return !s[off] ? 5381 : (hash(s, off+1)*33) ^ s[off];                           
+}                                                                                
 
-    } else if (ext == "jpg" || ext == "jpeg" ||
-               ext == "JPG" || ext == "JPEG") {
-        return IMG_JPG;
-    } else if (ext == "png" || ext == "PNG") {
-        return IMG_PNG;
-    } else if (ext == "TXT" || ext == "txt") {
-        return TXT_PLAIN;
-    } else if (ext == "html") {
-        return TXT_HTML;
-    } else if (ext == "css") {
-        return TXT_CSS;
-    } else if (ext == "js") {
-        return TXT_JS;
-    } else if (ext == "mp4") {
-        return VID_MP4;
-    } else {
-        return UNDEF;
+ContentType HttpResponse::GetContentType(const std::string& url) {
+    const char* ext = url.c_str() + url.rfind('.') + 1;
+    switch (hash(ext)) {
+        case hash("/"):
+            return TXT_HTML;
+        case hash("jpg"):
+        case hash("jpeg"):
+        case hash("JPG"):
+        case hash("JPEG"):
+            return IMG_JPG;
+        case hash("png"):
+        case hash("PNG"):
+            return IMG_PNG;
+        case hash("txt"):
+        case hash("TXT"):
+            return TXT_PLAIN;
+        case hash("html"):
+            return TXT_HTML;
+        case hash("css"):
+            return TXT_CSS;
+        case hash("js"):
+            return TXT_JS;
+        case hash("mp4"):
+            return VID_MP4;
+        default:
+            return UNDEF;
     }
 }
 
@@ -107,12 +119,12 @@ void HttpResponse::SetContentType(ContentType type) {
             c_t_header.second = "video/mp4";
             break;
         default:
-            throw UnknownContentTypeException();
+            c_t_header.second = "unknown";
+            break;
+            // throw UnknownContentTypeException();
     }
 
     headers.insert(c_t_header);
-    FormResponseHeader();
-    FormResponseData();
 }
 
 void HttpResponse::FormResponseHeader() {
@@ -122,13 +134,23 @@ void HttpResponse::FormResponseHeader() {
     
     if (http_version == "1.0" && keep_alive) {
         headers.insert(std::pair<std::string, std::string>("Connection", "Keep-Alive"));
-    } else if (http_version == "1.1" && !keep_alive) {
+    } else {
         headers.insert(std::pair<std::string, std::string>("Connection", "close"));
     }
 
     if (!response_body.empty()) {
         headers.insert(std::pair<std::string, std::string>("Content-Length", std::to_string(response_body.size())));
     }
+
+    headers.insert(std::pair<std::string, std::string>("Server", "My cool async server lol"));
+    headers.insert(std::pair<std::string, std::string>(
+        "Date", date::format("%F %T", std::chrono::system_clock::now())
+    ));
+    headers.insert(std::pair<std::string, std::string>(
+        "Content-Length", std::to_string(response_body.size())
+    ));
+
+    SetContentType(GetContentType(url));
 
     for (auto& header_pair : headers) {
         if (!header_pair.second.empty()) {

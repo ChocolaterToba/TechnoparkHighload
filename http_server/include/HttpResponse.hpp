@@ -16,6 +16,7 @@ class HttpResponse {
  public:
     HttpResponse(const std::string& HTTPVersion,
                  RequestMethod reqType,
+                 const std::string& url,
                  const std::string& returnCode,
                  bool keepAlive,
                  const std::vector<char>& body);
@@ -29,6 +30,7 @@ class HttpResponse {
 
  private:
     std::string http_version;
+    std::string url;
     std::string return_code;
     bool keep_alive;
 

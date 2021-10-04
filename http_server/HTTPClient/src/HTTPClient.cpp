@@ -175,8 +175,8 @@ void HTTPClient::RecvHeader() {
 
     header = result.substr(0, bodyStartIndex + shift / 2);
 
-    std::cerr <<"Received header, size: " << header.size() << " bytes:" << std::endl
-              << header << std::endl;
+    // std::cerr <<"Received header, size: " << header.size() << " bytes:" << std::endl
+    //           << header << std::endl;
 
     std::vector<char> temp(result.begin() + bodyStartIndex + shift, result.end());
     if (binaryBodyStarted) {
@@ -189,7 +189,7 @@ void HTTPClient::RecvBody() {
     std::vector<char> receivedBody = std::move(socket->recvVector(contentLength - body.size()));
     body.insert(body.end(), receivedBody.begin(), receivedBody.end());
 
-    std::cerr << "Received body, size: " << body.size() << " bytes" << std::endl;
+    // std::cerr << "Received body, size: " << body.size() << " bytes" << std::endl;
 }
 
 void HTTPClient::RecvHeaderAsync() {
@@ -220,10 +220,7 @@ void HTTPClient::RecvHeaderAsync() {
 
     header.append(result.substr(0, bodyStartIndex + shift / 2));
 
-    std::cerr <<"Received header's part, size: " << header.size() << " bytes:" << std::endl;
-    if (receivedHeader) {
-        std::cout << header << std::endl;
-    }
+    // std::cerr <<"Received header's part, size: " << header.size() << " bytes:" << std::endl;
 
     std::vector<char> temp(result.begin() + bodyStartIndex + shift, result.end());
     if (binaryBodyStarted) {
@@ -241,7 +238,7 @@ bool HTTPClient::RecvBodyAsync() {
     std::vector<char> receivedBody = std::move(socket->recvVectorMax(contentLength - body.size()));
     body.insert(body.end(), receivedBody.begin(), receivedBody.end());
 
-    std::cerr << "Received body, size: " << body.size() << " bytes" << std::endl;
+    // std::cerr << "Received body, size: " << body.size() << " bytes" << std::endl;
     return body.size() == contentLength;
 }
 
