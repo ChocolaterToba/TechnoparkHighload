@@ -1,5 +1,6 @@
 #include <string>
 #include <map>
+#include <stdexcept>
 
 #include "exceptions.hpp"
 #include "HttpRequest.hpp"

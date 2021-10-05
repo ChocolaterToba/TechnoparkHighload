@@ -1,3 +1,5 @@
+#include <stdexcept>
+
 #include "HttpResponseReader.hpp"
 
 HttpResponseReader::HttpResponseReader(const std::string &message) {

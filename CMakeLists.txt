@@ -7,7 +7,7 @@ set(CMAKE_BUILD_TYPE Debug)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a -Wall -Werror -Wpedantic -fPIC")
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/result)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 include_directories(${PROJECT_SOURCE_DIR}/http_server/include)
@@ -56,16 +56,13 @@ file(GLOB ASYNC_SRC
 
 add_library(asyncServer STATIC ${ASYNC_SRC})
 
-# Add pkg-config functionality
-find_package(PkgConfig REQUIRED) 
-
-# search for libevent.pc
-pkg_search_module(EVENT REQUIRED libevent)
+find_package(PkgConfig REQUIRED)
+pkg_search_module(LIBEVENT REQUIRED libevent)
 
 target_include_directories(asyncServer PUBLIC
                            ${PROJECT_SOURCE_DIR}/http_server/async/include
                            ${EVENT_INCLUDE_DIRS})
-target_link_libraries(asyncServer client pthread http_message pqxx ${EVENT_LIBRARIES})
+target_link_libraries(asyncServer client pthread http_message ${LIBEVENT_LIBRARIES})
 ######################
 
 ################################
@@ -79,17 +76,12 @@ option(ENABLE_TESTING "Build all tests." OFF) # Makes boolean 'test' available.
 if (ENABLE_TESTING)
   file(GLOB TEST_SRC http_server/test/main.cpp)
 
-  # Install Gtest
   include(FetchContent)
   FetchContent_Declare(
     googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG        release-1.8.0
+    URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
   )
   FetchContent_MakeAvailable(googletest)
-  include(GoogleTest)
-
-  include(CTest)
  
   # Link runTests with what we want to test and the GTest and DZ1 library
   add_executable(runTests ${TEST_SRC})
@@ -99,6 +91,8 @@ if (ENABLE_TESTING)
   target_link_libraries(runTests client)
   target_link_libraries(runTests asyncServer)
 
+  include(GoogleTest)
+  include(CTest)
   gtest_discover_tests(runTests)
 
 endif()
