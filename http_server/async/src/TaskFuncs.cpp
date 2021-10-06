@@ -59,11 +59,21 @@ void MainProcessBasic(map<string, string>& headers, vector<char>& body,
         return;
     }
 
-    int finalDotPos = headers["url"].rfind('.');
-    int finalSlashPos = headers["url"].rfind('/', finalDotPos);
-    std::string filename(headers["url"].c_str() + finalSlashPos + 1);
+    // TODO: decoding %
+
+    if (headers["url"].find("/../") != std::string::npos) {
+        headers["return_code"] = "403 Forbidden";
+        headers["Content-Length"] = "0";
+        output = std::move(input);
+        return;
+    }
+
+    size_t queryStartPos = headers["url"].find('?');
+    size_t finalDotPos = headers["url"].rfind('.', queryStartPos);
+    size_t finalSlashPos = headers["url"].rfind('/', finalDotPos);
+    std::string filename = headers["url"].substr(finalSlashPos + 1, queryStartPos - finalSlashPos - 1);
     std::string path = std::string(std::getenv("DOCUMENT_ROOT")) + "/" +
-        std::string(headers["url"].c_str() + 1, finalSlashPos);
+        headers["url"].substr(1, finalSlashPos);
 
     if (filename == "") {
         filename = "index.html";
@@ -79,7 +89,7 @@ void MainProcessBasic(map<string, string>& headers, vector<char>& body,
         } else {
             headers["return_code"] = "404 Not_Found";
         }
-        headers["Content-Length"] = std::to_string(0);
+        headers["Content-Length"] = "0";
     }
     
     output = std::move(input);
