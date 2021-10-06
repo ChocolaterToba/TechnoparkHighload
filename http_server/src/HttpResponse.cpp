@@ -35,11 +35,13 @@ HttpResponse::HttpResponse(const std::string& HTTPVersion,
                            const std::string& url,
                            const std::string& returnCode,
                            bool keepAlive,
+                           const std::string& contentLength,
                            const std::vector<char>& body) :
               http_version(HTTPVersion),
               url(url),
               return_code(returnCode),
-              keep_alive(keepAlive) {
+              keep_alive(keepAlive),
+              contentLength(std::stoi(contentLength)) {
     if (HTTPVersion.empty()) {
         http_version = "0.9";
         if (reqType == GET) {
@@ -51,14 +53,14 @@ HttpResponse::HttpResponse(const std::string& HTTPVersion,
         }
     }
 
-    SetResponseBody(body);
     FormResponseHeader();
+    SetResponseBody(body);
     FormResponseData();
 }
 
-constexpr unsigned int hash(const char *s, int off = 0) {                        
-    return !s[off] ? 5381 : (hash(s, off+1)*33) ^ s[off];                           
-}                                                                                
+constexpr unsigned int hash(const char *s, int off = 0) {  // Used just for switch()
+    return !s[off] ? 5381 : (hash(s, off+1)*33) ^ s[off];
+}
 
 ContentType HttpResponse::GetContentType(const std::string& url) {
     const char* ext = url.c_str() + url.rfind('.') + 1;
@@ -67,7 +69,6 @@ ContentType HttpResponse::GetContentType(const std::string& url) {
             return TXT_HTML;
         case hash("jpg"):
         case hash("JPG"):
-            return IMG_JPG;
         case hash("jpeg"):
         case hash("JPEG"):
             return IMG_JPEG;
@@ -113,9 +114,6 @@ void HttpResponse::SetContentType(ContentType type) {
         case TXT_PLAIN:
             c_t_header.second = "text/plain";
             break;
-        case IMG_JPG:
-            c_t_header.second = "image/jpg";
-            break;
         case IMG_JPEG:
             c_t_header.second = "image/jpeg";
             break;
@@ -156,7 +154,7 @@ void HttpResponse::FormResponseHeader() {
         "Date", date::format("%F %T", std::chrono::system_clock::now())
     ));
     headers.insert(std::pair<std::string, std::string>(
-        "Content-Length", std::to_string(response_body.size())
+        "Content-Length", std::to_string(contentLength)
     ));
 
     SetContentType(GetContentType(url));

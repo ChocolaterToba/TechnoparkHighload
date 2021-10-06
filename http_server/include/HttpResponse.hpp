@@ -19,6 +19,7 @@ class HttpResponse {
                  const std::string& url,
                  const std::string& returnCode,
                  bool keepAlive,
+                 const std::string& contentLength,
                  const std::vector<char>& body);
 
     HttpResponse() = delete;
@@ -34,9 +35,10 @@ class HttpResponse {
     std::string return_code;
     bool keep_alive;
 
-    std::vector<char> response_body;
     std::map<std::string, std::string> headers;
     std::string response_header;
+    size_t contentLength;
+    std::vector<char> response_body;
     std::vector<char> response;
 
     void SetResponseBody(const std::vector<char>& body);
