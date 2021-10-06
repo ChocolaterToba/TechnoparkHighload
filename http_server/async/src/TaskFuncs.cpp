@@ -59,7 +59,8 @@ void MainProcessBasic(map<string, string>& headers, vector<char>& body,
         return;
     }
 
-    int finalSlashPos = headers["url"].rfind('/');
+    int finalDotPos = headers["url"].rfind('.');
+    int finalSlashPos = headers["url"].rfind('/', finalDotPos);
     std::string filename(headers["url"].c_str() + finalSlashPos + 1);
     std::string path = std::string(std::getenv("DOCUMENT_ROOT")) + "/" +
         std::string(headers["url"].c_str() + 1, finalSlashPos);
@@ -73,7 +74,11 @@ void MainProcessBasic(map<string, string>& headers, vector<char>& body,
         headers["return_code"] = "200 OK";
         headers["Content-Length"] = std::to_string(readBytesAmount);
     } else {
-        headers["return_code"] = "404 Not_Found";
+        if (filename == "index.html") {
+            headers["return_code"] = "403 Forbidden";
+        } else {
+            headers["return_code"] = "404 Not_Found";
+        }
         headers["Content-Length"] = std::to_string(0);
     }
     
