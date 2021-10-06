@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
             sleep(10000);
         }
     } catch (const std::exception &e) {
-        std::cerr << e.what() << std::endl;
+        std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
 }

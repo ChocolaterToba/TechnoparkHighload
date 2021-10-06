@@ -32,14 +32,19 @@ void TaskBuilder::CreateTasks() {
         if (!unprocessedClients.empty())  {
             //  TaskBuilder is singular, so there's no "queue shrinking" problem. - fix, it's not necessarily true
             unprocessedClientsMutex->lock();
-            Task newTask(unprocessedClients.front());
-            unprocessedClients.pop();
-            unprocessedClientsMutex->unlock();
+            if (!unprocessedClients.empty())  {
+                Task newTask(unprocessedClients.front());
+                unprocessedClients.pop();
+                unprocessedClientsMutex->unlock();
 
-            haveNoDataMutex->lock();
-            haveNoData.emplace(newTask.GetInput().GetSd(), newTask);
-            haveNoDataEvents.AddEvent(newTask.GetInput().GetSd());
-            haveNoDataMutex->unlock();
+                haveNoDataMutex->lock();
+                haveNoData.emplace(newTask.GetInput().GetSd(), newTask);
+                haveNoDataEvents.AddEvent(newTask.GetInput().GetSd());
+                haveNoDataMutex->unlock();
+            } else {
+                haveNoDataMutex->unlock();
+                sleep(30);
+            }
         } else {
             msleep(30);
         }

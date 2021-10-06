@@ -41,17 +41,19 @@ void Worker::TakeNewTask() {
         while (!stop) {
             if (!tasks.empty()) {
                 if (tasksMutex->try_lock()) {
-                    currentTask = std::move(tasks.front());
-                    tasks.pop();
-                    tasksMutex->unlock();
-                    state = TaskReceived;
-                    break;
-                } else {
-                    msleep(30);
+                    if (!tasks.empty()) {  // Just in case, otherwise sometimes segfault happens
+                        currentTask = std::move(tasks.front());
+                        tasks.pop();
+                        tasksMutex->unlock();
+                        state = TaskReceived;
+                        break;
+                    } else {
+                        tasksMutex->unlock();
+                    }
                 }
-            } else {
-                msleep(30);
             }
+
+            msleep(30);
         }
     } else {
         throw std::runtime_error(std::string(
