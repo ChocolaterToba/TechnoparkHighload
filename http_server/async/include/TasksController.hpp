@@ -35,7 +35,7 @@ class TasksController {
     void Start();
     void Stop();
 
-    void MoveTask(evutil_socket_t fd, short events, event* ev);
+    bool MoveTask(evutil_socket_t fd, short events, event* ev);  // returns true if event is freed
 };
 
 void MoveTaskWrapper(evutil_socket_t fd, short events, void* ctx);

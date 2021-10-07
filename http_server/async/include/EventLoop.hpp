@@ -47,7 +47,10 @@ class EventLoop {
         timeout(timeout),
         stop(true) {
             evthread_use_pthreads();
-            base = std::move(std::shared_ptr<event_base>(event_base_new(), [](event_base* base) { event_base_free(base); }));
+            // base is initialised here because evthread_use_pthreads had to be called first, so that libevent is multithread-usable
+            base = std::move(std::shared_ptr<event_base>(
+                event_base_new(), [](event_base* base) { event_base_free(base); }
+            ));
         }
 
     ~EventLoop() {

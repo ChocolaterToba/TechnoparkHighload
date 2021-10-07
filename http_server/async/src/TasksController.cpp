@@ -41,25 +41,31 @@ void TasksController::Stop() {
 
 void MoveTaskWrapper(evutil_socket_t fd, short events, void* ctx) {
     ControllerPackage* package = static_cast<ControllerPackage*>(ctx);
-    package->argument->MoveTask(fd, events, package->ev);  // TODO!!!!!!!!!!!!!!!
-    delete package;
+    if (package->argument->MoveTask(fd, events, package->ev)) {
+        delete package;
+    }
 }
 
-void TasksController::MoveTask(evutil_socket_t fd, short events, event* ev) {
+bool TasksController::MoveTask(evutil_socket_t fd, short events, event* ev) {
     if (events & EV_TIMEOUT) {
         haveNoDataEvents.FreeEvent(ev);
         TimeoutTaskRemove(fd);
-    } else {
-        try {
-            if (ReceiveInput(fd)) {
-                haveNoDataEvents.FreeEvent(ev);
-                MoveTask(fd);
-            } 
-        } catch (const std::exception &e) {
-            haveNoDataEvents.FreeEvent(ev);
-            TimeoutTaskRemove(fd);
-        }
+        return true;
     }
+
+    try {
+        if (ReceiveInput(fd)) {
+            haveNoDataEvents.FreeEvent(ev);
+            MoveTask(fd);
+            return true;
+        }
+    } catch (const std::exception &e) {
+        haveNoDataEvents.FreeEvent(ev);
+        TimeoutTaskRemove(fd);
+        return true;
+    }
+
+    return false;
 }
 
 bool TasksController::ReceiveInput(int sd) {
