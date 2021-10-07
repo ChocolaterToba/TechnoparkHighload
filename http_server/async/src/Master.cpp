@@ -21,7 +21,7 @@ Master::Master(std::map<std::string, int>& ports, size_t workersAmount):
         unprocessedClientsMutex(std::make_shared<std::mutex>()),
 
         haveNoData(),
-        haveNoDataEvents(&TasksController::MoveTaskWrapper),
+        haveNoDataEvents(&MoveTaskWrapper),
         haveNoDataMutex(std::make_shared<std::mutex>()),
 
         builder(unprocessedClients, unprocessedClientsMutex,

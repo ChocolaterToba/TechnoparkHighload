@@ -56,13 +56,21 @@ file(GLOB ASYNC_SRC
 
 add_library(asyncServer STATIC ${ASYNC_SRC})
 
-find_package(PkgConfig REQUIRED)
-pkg_search_module(LIBEVENT REQUIRED libevent)
+set(LibEvent_EXTRA_PREFIXES /usr/local /opt/local "$ENV{HOME}")
+foreach(prefix ${LibEvent_EXTRA_PREFIXES})
+  list(APPEND LibEvent_INCLUDE_PATHS "${prefix}/include")
+  list(APPEND LibEvent_LIB_PATHS "${prefix}/lib")
+endforeach()
+
+find_path(LIBEVENT_INCLUDE_DIR event.h PATHS ${LibEvent_INCLUDE_PATHS})
+find_library(LIBEVENT_LIB NAMES event PATHS ${LibEvent_LIB_PATHS})
+find_library(LIBEVENT_PTHREAD_LIB NAMES event_pthreads PATHS ${LibEvent_LIB_PATHS})
+
 
 target_include_directories(asyncServer PUBLIC
                            ${PROJECT_SOURCE_DIR}/http_server/async/include
                            ${EVENT_INCLUDE_DIRS})
-target_link_libraries(asyncServer client pthread http_message ${LIBEVENT_LIBRARIES})
+target_link_libraries(asyncServer client pthread http_message ${LIBEVENT_LIB} ${LIBEVENT_PTHREAD_LIB})
 ######################
 
 ################################

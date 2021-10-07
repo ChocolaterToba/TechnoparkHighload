@@ -255,7 +255,12 @@ void HTTPClient::Send(bool close) {
 }
 
 void HTTPClient::Send(std::vector<char> data, bool close) {
-    socket->send(std::move(data));
+    try {
+        socket->send(std::move(data));
+    } catch (const std::exception &e) {
+        // do nothing
+    }
+
     if (close) {
         socket.reset();
     }

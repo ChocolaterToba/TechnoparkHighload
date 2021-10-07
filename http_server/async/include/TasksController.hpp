@@ -35,5 +35,7 @@ class TasksController {
     void Start();
     void Stop();
 
-    static void MoveTaskWrapper(evutil_socket_t fd, short events, void* ctx);
+    void MoveTask(evutil_socket_t fd, short events, event* ev);
 };
+
+void MoveTaskWrapper(evutil_socket_t fd, short events, void* ctx);

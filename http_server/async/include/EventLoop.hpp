@@ -4,6 +4,8 @@
 #include <mutex>
 #include <memory>
 #include <event2/event.h>
+#include <event2/thread.h>
+#include <pthread.h>
 
 #include "CallbackPackage.hpp"
 
@@ -11,7 +13,6 @@ template <typename T>
 class EventLoop {
  private:
     std::shared_ptr<struct event_base> base;
-    std::mutex baseMutex;
 
     event_callback_fn callback;
     std::shared_ptr<T> callbackArgument;
@@ -21,23 +22,33 @@ class EventLoop {
     std::thread loopThread;
     void RunLoop() {
         while (!stop) {
-            event_base_loop(base.get(), EVLOOP_ONCE);
+            eventLoopRunningMutex.lock();
+
+            event_base_loop(base.get(), EVLOOP_NO_EXIT_ON_EMPTY);
+
+            eventLoopRunningMutex.unlock();
+            addEventRunningMutex.lock(); // This lock is needed so that eventloop does not lock before AddEvent is finished
+            addEventRunningMutex.unlock();
         }
     }
     bool stop;
+
+    std::mutex eventLoopRunningMutex;
+    std::mutex addEventRunningMutex;
 
  public:
     EventLoop(event_callback_fn callback,
               std::shared_ptr<T> callbackArgument = std::shared_ptr<T>(),  // shared_ptr just for emptyness support
               short eventFlags = EV_READ | EV_TIMEOUT | EV_PERSIST,
               int timeout = 120) :
-        base(event_base_new(), [](event_base* base) { event_base_free(base); }),
-        baseMutex(),
         callback(callback),
         callbackArgument(callbackArgument),
         eventFlags(eventFlags),
         timeout(timeout),
-        stop(true) {}
+        stop(true) {
+            evthread_use_pthreads();
+            base = std::move(std::shared_ptr<event_base>(event_base_new(), [](event_base* base) { event_base_free(base); }));
+        }
 
     ~EventLoop() {
         // TODO: add package removal
@@ -54,13 +65,23 @@ class EventLoop {
     }
 
     void AddEvent(evutil_socket_t sd) {
-        struct event* ev = event_new(base.get(), sd, 0, nullptr, nullptr);
-        CallbackPackage<T>* package = new CallbackPackage<T>(callbackArgument, ev);  // maybe replace with smart ptr?
-        event_assign(ev, base.get(), sd, eventFlags, callback, package);
+        CallbackPackage<T>* package = new CallbackPackage<T>(callbackArgument);  // maybe replace with smart ptr?
+        struct event* ev = event_new(base.get(), sd, eventFlags, callback, package);
+        package->ev = ev;
         struct timeval timeout = {this->timeout, 0};
-        baseMutex.lock();
+
+        addEventRunningMutex.lock();
+        event_base_loopexit(base.get(), nullptr);
+        eventLoopRunningMutex.lock();
         event_add(ev, &timeout);
-        baseMutex.unlock();
+
+        eventLoopRunningMutex.unlock();
+        addEventRunningMutex.unlock();
+    }
+    void FreeEvent(event* ev) {
+        // baseMutex.lock(); // Not needed - this function should only be used in callback, which is called by RunLoop
+        event_free(ev);
+        // baseMutex.unlock();
     }
 
     void StartLoop() {

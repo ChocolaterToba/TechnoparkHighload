@@ -39,8 +39,8 @@ void TaskBuilder::CreateTasks() {
 
                 haveNoDataMutex->lock();
                 haveNoData.emplace(newTask.GetInput().GetSd(), newTask);
-                haveNoDataEvents.AddEvent(newTask.GetInput().GetSd());
                 haveNoDataMutex->unlock();
+                haveNoDataEvents.AddEvent(newTask.GetInput().GetSd());
             } else {
                 haveNoDataMutex->unlock();
                 sleep(30);
