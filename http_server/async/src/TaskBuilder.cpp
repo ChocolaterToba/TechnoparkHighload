@@ -27,12 +27,12 @@ TaskBuilder::~TaskBuilder() {
 
 void TaskBuilder::CreateTasks() {
     while (!stop) {
-        Task newTask();
-        if (unprocessedClients.try_dequeue(newTask))  {
+        HTTPClient newClient;
+        if (unprocessedClients.try_dequeue(newClient))  {
             haveNoDataMutex->lock();
-            haveNoData.emplace(newTask.GetInput().GetSd(), newTask);
+            haveNoData.emplace(newClient.GetSd(), Task(newClient));
             haveNoDataMutex->unlock();
-            haveNoDataEvents.AddEvent(newTask.GetInput().GetSd());
+            haveNoDataEvents.AddEvent(newClient.GetSd());
         } else {
             msleep(30);
         }

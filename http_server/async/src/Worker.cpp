@@ -22,7 +22,7 @@ Worker::Worker(Worker&& other) :
 
 Worker& Worker::operator=(Worker&& other) {
     Stop();
-    tasks = other.tasks;
+    tasks = std::move(other.tasks);
     currentTask = Task();
     state = NoTask;
     other.Stop();

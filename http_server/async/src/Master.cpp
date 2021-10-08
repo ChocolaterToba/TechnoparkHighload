@@ -83,7 +83,7 @@ void Master::Stop() {  // Processes all existing connections
             listener.Stop();  // TODO: stop external listener first
         }
 
-        while (!unprocessedClients.empty()) {
+        while (unprocessedClients.size_approx() != 0) {
             msleep(120);
         }
         builder.Stop();
@@ -93,7 +93,7 @@ void Master::Stop() {  // Processes all existing connections
         }
         controller.Stop();
 
-        while (!haveData.empty()) {
+        while (unprocessedClients.size_approx() != 0) {
             msleep(120);
         }
         for (Worker& worker : workers) {

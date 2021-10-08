@@ -30,18 +30,18 @@ class Task {
     explicit Task(HTTPClient& input);
     virtual ~Task() = default;
 
-    virtual PreFuncType GetPreFunc();
-    virtual MainFuncType GetMainFunc();
-    virtual PostFuncType GetPostFunc();
+    PreFuncType GetPreFunc();
+    MainFuncType GetMainFunc();
+    PostFuncType GetPostFunc();
 
-    virtual void SetPreFunc(PreFuncType preFunc);
-    virtual void SetMainFunc(MainFuncType mainFunc);
-    virtual void SetPostFunc(PostFuncType postFunc);
+    void SetPreFunc(PreFuncType preFunc);
+    void SetMainFunc(MainFuncType mainFunc);
+    void SetPostFunc(PostFuncType postFunc);
 
-    virtual HTTPClient& GetInput();
-    virtual HTTPClient& GetOutput();
-    virtual void SetInput(HTTPClient& input);
-    virtual void SetOutput(HTTPClient& output);
+    HTTPClient& GetInput();
+    HTTPClient& GetOutput();
+    void SetInput(HTTPClient& input);
+    void SetOutput(HTTPClient& output);
 
-    virtual bool HasData();
+    bool HasData();
 };
