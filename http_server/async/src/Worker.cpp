@@ -1,32 +1,28 @@
 #include <thread>
-#include <mutex>
 #include <functional>
 #include <memory>
 #include <vector>
-#include <queue>
 
 #include "msleep.hpp"
+#include "concurrentqueue.hpp"
 
 #include "Worker.hpp"
 #include "Task.hpp"
 
-Worker::Worker(std::queue<Task>& tasks,
-               std::shared_ptr<std::mutex> tasksMutex) :
+Worker::Worker(moodycamel::ConcurrentQueue<Task>& tasks) :
         tasks(tasks),
-        tasksMutex(tasksMutex),
         state(NoTask),
         body(std::make_shared<std::vector<char>>()),
         stop(true) {}
 
 Worker::Worker(Worker&& other) :
-        Worker(other.tasks, other.tasksMutex) {
+        Worker(other.tasks) {
     other.Stop();
 }
 
 Worker& Worker::operator=(Worker&& other) {
     Stop();
     tasks = other.tasks;
-    tasksMutex = other.tasksMutex;
     currentTask = Task();
     state = NoTask;
     other.Stop();
@@ -40,21 +36,12 @@ Worker::~Worker() {
 void Worker::TakeNewTask() {
     if (state == NoTask) {
         while (!stop) {
-            if (!tasks.empty()) {
-                if (tasksMutex->try_lock()) {
-                    if (!tasks.empty()) {  // Just in case, otherwise sometimes segfault happens
-                        currentTask = std::move(tasks.front());
-                        tasks.pop();
-                        tasksMutex->unlock();
-                        state = TaskReceived;
-                        break;
-                    } else {
-                        tasksMutex->unlock();
-                    }
-                }
+            if (tasks.try_dequeue(currentTask)) {
+                state = TaskReceived;
+                break;
             }
 
-            msleep(30);
+            msleep(1);
         }
     } else {
         throw std::runtime_error(std::string(

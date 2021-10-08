@@ -1,9 +1,9 @@
 #pragma once
 
 #include <memory>
-#include <mutex>
-#include <queue>
 #include <thread>
+
+#include "concurrentqueue.hpp"
 
 #include "socket.hpp"
 #include "HTTPClient.hpp"
@@ -11,8 +11,7 @@
 class Listener {
  private:
     Socket socket;
-    std::queue<HTTPClient>& unprocessedClients;
-    std::shared_ptr<std::mutex> unprocessedClientsMutex;
+    moodycamel::ConcurrentQueue<HTTPClient>& unprocessedClients;
 
     bool stop;
 
@@ -21,9 +20,7 @@ class Listener {
     void Loop();
  
  public:
-    explicit Listener(int port,
-                      std::queue<HTTPClient>& unprocessedClients,
-                      std::shared_ptr<std::mutex> unprocessedClientsMutex);
+    explicit Listener(int port, moodycamel::ConcurrentQueue<HTTPClient>& unprocessedClients);
 
     Listener(const Listener& other) = delete;
     Listener(Listener&& other);

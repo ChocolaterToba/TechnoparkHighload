@@ -1,9 +1,11 @@
 #include <string>
 #include <vector>
-#include <queue>
 #include <set>
 #include <map>
 #include <memory>
+
+#include "concurrentqueue.hpp"
+
 #include "socket.hpp"
 #include "HTTPClient.hpp"
 
@@ -37,7 +39,7 @@ std::vector<char>::iterator HTTPClient::ParseBuffer(std::vector<char>& buffer, s
     return endlineIter;
 }
 
-void HTTPClient::SetBody(std::queue<std::string>& bodyQueue, const std::string& separator) {
+void HTTPClient::SetBody(moodycamel::ConcurrentQueue<std::string>& bodyQueue, const std::string& separator) {
     body->clear();
     for (size_t i = 0; i < bodyQueue.size(); ++i) {
         std::string& str = bodyQueue.front();
@@ -52,13 +54,13 @@ void HTTPClient::SetBody(std::queue<std::string>& bodyQueue, const std::string& 
     }
 }
 
-std::queue<std::string> HTTPClient::GetBodyQueue(const std::string& separator) const {
+moodycamel::ConcurrentQueue<std::string> HTTPClient::GetBodyQueue(const std::string& separator) const {
     return SplitVectorToQueue(*body, separator);
 }
 
-std::queue<std::string> HTTPClient::SplitVectorToQueue(const std::vector<char>& origin, const std::string& separator) {
+moodycamel::ConcurrentQueue<std::string> HTTPClient::SplitVectorToQueue(const std::vector<char>& origin, const std::string& separator) {
     std::string bodyString(origin.begin(), origin.end());
-    std::queue<std::string> result;
+    moodycamel::ConcurrentQueue<std::string> result;
 
     size_t start = 0;
     size_t end = 0;
@@ -73,7 +75,7 @@ std::queue<std::string> HTTPClient::SplitVectorToQueue(const std::vector<char>& 
     return result;
 }
 
-std::vector<char> HTTPClient::MergeQueueToVector(std::queue<std::string>& origin, const std::string& separator) {
+std::vector<char> HTTPClient::MergeQueueToVector(moodycamel::ConcurrentQueue<std::string>& origin, const std::string& separator) {
     std::vector<char> result;
     for (size_t i = 0; i < origin.size(); ++i) {
         result.insert(result.end(), origin.front().begin(), origin.front().end());

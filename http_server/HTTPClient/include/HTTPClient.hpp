@@ -2,10 +2,12 @@
 
 #include <string>
 #include <vector>
-#include <queue>
 #include <set>
 #include <map>
 #include <memory>
+
+#include "concurrentqueue.hpp"
+
 #include "socket.hpp"
 
 class HTTPClient {
@@ -28,10 +30,10 @@ class HTTPClient {
 
     std::string GetHeader() const { return header; }
     std::shared_ptr<std::vector<char>> GetBody() const { return body; }
-    std::queue<std::string> GetBodyQueue(const std::string& separator = "|") const;
+    moodycamel::ConcurrentQueue<std::string> GetBodyQueue(const std::string& separator = "|") const;
 
-    static std::queue<std::string> SplitVectorToQueue(const std::vector<char>& origin, const std::string& separator = "|");
-    static std::vector<char> MergeQueueToVector(std::queue<std::string>& origin, const std::string& separator = "|");
+    static moodycamel::ConcurrentQueue<std::string> SplitVectorToQueue(const std::vector<char>& origin, const std::string& separator = "|");
+    static std::vector<char> MergeQueueToVector(moodycamel::ConcurrentQueue<std::string>& origin, const std::string& separator = "|");
 
     static std::set<std::string> SplitVectorToSet(const std::vector<char>& origin, const std::string& separator = "|");
     static std::vector<char> MergeSetToVector(const std::set<std::string>& origin, const std::string& separator = "|");
@@ -45,7 +47,7 @@ class HTTPClient {
 
     void SetHeader(std::string header) { this->header = std::move(header); }
     void SetBody(std::vector<char> body) { this->body = std::make_shared<std::vector<char>>(body); }
-    void SetBody(std::queue<std::string>& bodyQueue, const std::string& separator = "|");
+    void SetBody(moodycamel::ConcurrentQueue<std::string>& bodyQueue, const std::string& separator = "|");
     void SetContentLength(size_t contentLength) { this->contentLength = contentLength; }
 
     void RecvHeader();

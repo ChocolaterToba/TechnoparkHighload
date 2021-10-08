@@ -2,10 +2,11 @@
 
 #include <memory>
 #include <thread>
-#include <queue>
 #include <map>
 #include <mutex>
 #include <event2/event.h>
+
+#include "concurrentqueue.hpp"
 
 #include "EventLoop.hpp"
 #include "Task.hpp"
@@ -13,8 +14,7 @@
 
 class TaskBuilder {
  protected:
-    std::queue<HTTPClient>& unprocessedClients;
-    std::shared_ptr<std::mutex> unprocessedClientsMutex;
+    moodycamel::ConcurrentQueue<HTTPClient>& unprocessedClients;
 
     std::map<int, Task>& haveNoData;
     EventLoop<TasksController>& haveNoDataEvents;
@@ -26,8 +26,7 @@ class TaskBuilder {
     bool stop;
 
  public:
-    TaskBuilder(std::queue<HTTPClient>& unprocessedClients,
-                std::shared_ptr<std::mutex> unprocessedClientsMutex,
+    TaskBuilder(moodycamel::ConcurrentQueue<HTTPClient>& unprocessedClients,
                 std::map<int, Task>& haveNoData,
                 EventLoop<TasksController>& haveNoDataEvents,
                 std::shared_ptr<std::mutex> haveNoDataMutex);

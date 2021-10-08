@@ -1,6 +1,5 @@
 #include <memory>
 #include <vector>
-#include <queue>
 #include <gtest/gtest.h>
 
 #include "socket.hpp"

@@ -1,4 +1,3 @@
-#include <queue>
 #include <mutex>
 #include <thread>
 #include <memory>
@@ -6,6 +5,7 @@
 
 #include "msleep.hpp"
 #include "ports.hpp"
+#include "concurrentqueue.hpp"
 
 #include "CallbackPackage.hpp"
 #include "HTTPClient.hpp"
@@ -19,13 +19,11 @@ typedef CallbackPackage<TasksController> ControllerPackage;  // rework?
 TasksController::TasksController(std::map<int, Task>& haveNoData,
                                  EventLoop<TasksController>& haveNoDataEvents,
                                  std::shared_ptr<std::mutex> haveNoDataMutex,
-                                 std::queue<Task>& haveData,
-                                 std::shared_ptr<std::mutex> haveDataMutex) :
+                                 moodycamel::ConcurrentQueue<Task>& haveData) :
     haveNoData(haveNoData),
     haveNoDataEvents(haveNoDataEvents),
     haveNoDataMutex(haveNoDataMutex),
-    haveData(haveData),
-    haveDataMutex(haveDataMutex) {}
+    haveData(haveData) {}
 
 TasksController::~TasksController() {
     Stop();
@@ -92,9 +90,7 @@ void TasksController::MoveTask(int sd) {
     haveNoData.erase(sd);
     haveNoDataMutex->unlock();
 
-    haveDataMutex->lock();
-    haveData.push(std::move(task));
-    haveDataMutex->unlock();
+    haveData.enqueue(std::move(task));
 }
 
 void TasksController::TimeoutTaskRemove(int sd) {

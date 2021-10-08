@@ -4,7 +4,6 @@
 #include <vector>
 #include <map>
 #include <string>
-#include <mutex>
 #include "HTTPClient.hpp"
 
 typedef std::function<void(std::map<std::string, std::string>& headers,

@@ -1,11 +1,12 @@
 #pragma once
 
-#include <queue>
+#include <memory>
+#include <thread>
 #include <map>
 #include <mutex>
-#include <thread>
-#include <memory>
 #include <event2/event.h>
+
+#include "concurrentqueue.hpp"
 
 #include "EventLoop.hpp"
 #include "Task.hpp"
@@ -16,8 +17,7 @@ class TasksController {
     EventLoop<TasksController>& haveNoDataEvents;
     std::shared_ptr<std::mutex> haveNoDataMutex;
 
-    std::queue<Task>& haveData;
-    std::shared_ptr<std::mutex> haveDataMutex;
+    moodycamel::ConcurrentQueue<Task>& haveData;
 
     bool ReceiveInput(int sd);
     void MoveTask(int sd);
@@ -27,8 +27,7 @@ class TasksController {
     TasksController(std::map<int, Task>& haveNoData,
                     EventLoop<TasksController>& haveNoDataEvents,
                     std::shared_ptr<std::mutex> haveNoDataMutex,
-                    std::queue<Task>& haveData,
-                    std::shared_ptr<std::mutex> haveDataMutex);
+                    moodycamel::ConcurrentQueue<Task>& haveData);
 
     ~TasksController();
 

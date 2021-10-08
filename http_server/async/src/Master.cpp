@@ -1,11 +1,11 @@
 #include <memory>
 #include <vector>
-#include <queue>
 #include <map>
 
 #include <iostream>
 
 #include "msleep.hpp"
+#include "concurrentqueue.hpp"
 
 #include "socket.hpp"
 #include "HTTPClient.hpp"
@@ -20,20 +20,16 @@ Master::Master(std::map<std::string, int>& ports, size_t workersAmount):
         ports(ports),
 
         unprocessedClients(),
-        unprocessedClientsMutex(std::make_shared<std::mutex>()),
 
         haveNoData(),
         haveNoDataEvents(&MoveTaskWrapper),
         haveNoDataMutex(std::make_shared<std::mutex>()),
 
-        builder(unprocessedClients, unprocessedClientsMutex,
-                haveNoData, haveNoDataEvents, haveNoDataMutex),
+        builder(unprocessedClients, haveNoData, haveNoDataEvents, haveNoDataMutex),
 
         haveData(),
-        haveDataMutex(std::make_shared<std::mutex>()),
 
-        controller(haveNoData, haveNoDataEvents, haveNoDataMutex,
-                   haveData, haveDataMutex),
+        controller(haveNoData, haveNoDataEvents, haveNoDataMutex, haveData),
 
         stop(true) {
             if (ports.find("external") == ports.end()) {
@@ -42,7 +38,7 @@ Master::Master(std::map<std::string, int>& ports, size_t workersAmount):
                 ));
             }
             for (auto& keyVal : ports) {
-                listeners.emplace_back(keyVal.second, unprocessedClients, unprocessedClientsMutex);
+                listeners.emplace_back(keyVal.second, unprocessedClients);
             }
 
             haveNoDataEvents.SetCallbackArgument(std::shared_ptr<TasksController>(&controller));
@@ -55,7 +51,7 @@ Master::Master(std::map<std::string, int>& ports, size_t workersAmount):
 
             std::cout << "Creating " << workersAmount << " workers" << std::endl;
             for (size_t i = 0; i < workersAmount; ++i) {
-                workers.emplace_back(haveData, haveDataMutex);
+                workers.emplace_back(haveData);
             }
         }
 

@@ -1,11 +1,12 @@
 #pragma once
 
 #include <thread>
-#include <mutex>
 #include <functional>
 #include <memory>
 #include <vector>
-#include <queue>
+
+#include "concurrentqueue.hpp"
+
 #include "HTTPClient.hpp"
 #include "Task.hpp"
 
@@ -21,8 +22,7 @@ typedef enum {
 
 class Worker {
  private:
-    std::queue<Task>& tasks;
-    std::shared_ptr<std::mutex> tasksMutex;
+    moodycamel::ConcurrentQueue<Task>& tasks;
     Task currentTask;
     WorkerStates state;
 
@@ -41,8 +41,7 @@ class Worker {
     virtual void Loop();
 
  public:
-    Worker(std::queue<Task>& tasks,
-           std::shared_ptr<std::mutex> tasksMutex);
+    Worker(moodycamel::ConcurrentQueue<Task>& tasks);
 
     Worker(const Worker& other) = delete;
     Worker(Worker&& other);
