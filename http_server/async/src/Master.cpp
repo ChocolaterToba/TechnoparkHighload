@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include "msleep.hpp"
-#include "concurrentqueue.hpp"
+#include "blockingconcurrentqueue.hpp"
 
 #include "socket.hpp"
 #include "HTTPClient.hpp"

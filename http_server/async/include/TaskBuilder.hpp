@@ -6,7 +6,7 @@
 #include <mutex>
 #include <event2/event.h>
 
-#include "concurrentqueue.hpp"
+#include "blockingconcurrentqueue.hpp"
 
 #include "EventLoop.hpp"
 #include "Task.hpp"
@@ -14,7 +14,7 @@
 
 class TaskBuilder {
  protected:
-    moodycamel::ConcurrentQueue<HTTPClient>& unprocessedClients;
+    moodycamel::BlockingConcurrentQueue<HTTPClient>& unprocessedClients;
 
     std::map<int, Task>& haveNoData;
     EventLoop<TasksController>& haveNoDataEvents;
@@ -26,7 +26,7 @@ class TaskBuilder {
     bool stop;
 
  public:
-    TaskBuilder(moodycamel::ConcurrentQueue<HTTPClient>& unprocessedClients,
+    TaskBuilder(moodycamel::BlockingConcurrentQueue<HTTPClient>& unprocessedClients,
                 std::map<int, Task>& haveNoData,
                 EventLoop<TasksController>& haveNoDataEvents,
                 std::shared_ptr<std::mutex> haveNoDataMutex);

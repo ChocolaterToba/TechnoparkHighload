@@ -4,7 +4,7 @@
 #include <vector>
 #include <map>
 
-#include "concurrentqueue.hpp"
+#include "blockingconcurrentqueue.hpp"
 
 #include "socket.hpp"
 #include "HTTPClient.hpp"
@@ -23,7 +23,7 @@ class Master {
     std::map<std::string, int> ports;
     std::vector<Listener> listeners;
 
-    moodycamel::ConcurrentQueue<HTTPClient> unprocessedClients;
+    moodycamel::BlockingConcurrentQueue<HTTPClient> unprocessedClients;
 
     std::map<int, Task> haveNoData;
     EventLoop<TasksController> haveNoDataEvents;
@@ -31,7 +31,7 @@ class Master {
 
     TaskBuilder builder;
 
-    moodycamel::ConcurrentQueue<Task> haveData;
+    moodycamel::BlockingConcurrentQueue<Task> haveData;
 
     TasksController controller;
 

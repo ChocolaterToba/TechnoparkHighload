@@ -4,12 +4,12 @@
 #include <vector>
 
 #include "msleep.hpp"
-#include "concurrentqueue.hpp"
+#include "blockingconcurrentqueue.hpp"
 
 #include "Worker.hpp"
 #include "Task.hpp"
 
-Worker::Worker(moodycamel::ConcurrentQueue<Task>& tasks) :
+Worker::Worker(moodycamel::BlockingConcurrentQueue<Task>& tasks) :
         tasks(tasks),
         state(NoTask),
         body(std::make_shared<std::vector<char>>()),
@@ -36,12 +36,10 @@ Worker::~Worker() {
 void Worker::TakeNewTask() {
     if (state == NoTask) {
         while (!stop) {
-            if (tasks.try_dequeue(currentTask)) {
+            if (tasks.wait_dequeue_timed(currentTask, std::chrono::milliseconds(100))) {  // timer only really matters when stopping builder
                 state = TaskReceived;
                 break;
             }
-
-            msleep(1);
         }
     } else {
         throw std::runtime_error(std::string(

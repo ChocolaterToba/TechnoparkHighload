@@ -4,14 +4,14 @@
 #include <event2/event.h>
 
 #include "msleep.hpp"
-#include "concurrentqueue.hpp"
+#include "blockingconcurrentqueue.hpp"
 
 #include "EventLoop.hpp"
 #include "Task.hpp"
 #include "TasksController.hpp"
 #include "TaskBuilder.hpp"
 
-TaskBuilder::TaskBuilder(moodycamel::ConcurrentQueue<HTTPClient>& unprocessedClients,
+TaskBuilder::TaskBuilder(moodycamel::BlockingConcurrentQueue<HTTPClient>& unprocessedClients,
                          std::map<int, Task>& haveNoData,
                          EventLoop<TasksController>& haveNoDataEvents,
                          std::shared_ptr<std::mutex> haveNoDataMutex) :
@@ -28,13 +28,11 @@ TaskBuilder::~TaskBuilder() {
 void TaskBuilder::CreateTasks() {
     while (!stop) {
         HTTPClient newClient;
-        if (unprocessedClients.try_dequeue(newClient))  {
+        if (unprocessedClients.wait_dequeue_timed(newClient, std::chrono::milliseconds(100)))  {  // timer only really matters when stopping builder
             haveNoDataMutex->lock();
             haveNoData.emplace(newClient.GetSd(), Task(newClient));
             haveNoDataMutex->unlock();
             haveNoDataEvents.AddEvent(newClient.GetSd());
-        } else {
-            msleep(30);
         }
     }
 }

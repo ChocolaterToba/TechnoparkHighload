@@ -5,7 +5,7 @@
 #include <memory>
 #include <vector>
 
-#include "concurrentqueue.hpp"
+#include "blockingconcurrentqueue.hpp"
 
 #include "HTTPClient.hpp"
 #include "Task.hpp"
@@ -22,7 +22,7 @@ typedef enum {
 
 class Worker {
  private:
-    moodycamel::ConcurrentQueue<Task>& tasks;
+    moodycamel::BlockingConcurrentQueue<Task>& tasks;
     Task currentTask;
     WorkerStates state;
 
@@ -41,7 +41,7 @@ class Worker {
     virtual void Loop();
 
  public:
-    Worker(moodycamel::ConcurrentQueue<Task>& tasks);
+    Worker(moodycamel::BlockingConcurrentQueue<Task>& tasks);
 
     Worker(const Worker& other) = delete;
     Worker(Worker&& other);

@@ -5,7 +5,7 @@
 
 #include "msleep.hpp"
 #include "ports.hpp"
-#include "concurrentqueue.hpp"
+#include "blockingconcurrentqueue.hpp"
 
 #include "CallbackPackage.hpp"
 #include "HTTPClient.hpp"
@@ -19,7 +19,7 @@ typedef CallbackPackage<TasksController> ControllerPackage;  // rework?
 TasksController::TasksController(std::map<int, Task>& haveNoData,
                                  EventLoop<TasksController>& haveNoDataEvents,
                                  std::shared_ptr<std::mutex> haveNoDataMutex,
-                                 moodycamel::ConcurrentQueue<Task>& haveData) :
+                                 moodycamel::BlockingConcurrentQueue<Task>& haveData) :
     haveNoData(haveNoData),
     haveNoDataEvents(haveNoDataEvents),
     haveNoDataMutex(haveNoDataMutex),

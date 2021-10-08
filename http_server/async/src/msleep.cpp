@@ -19,3 +19,22 @@ int msleep(long msec) {
 
     return res;
 }
+
+int nsleep(long nsec) {
+    struct timespec ts;
+    int res;
+
+    if (nsec < 0) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    ts.tv_sec = nsec / 1000000000;
+    ts.tv_nsec = nsec % 1000000000;
+
+    do {
+        res = nanosleep(&ts, &ts);
+    } while (res && errno == EINTR);
+
+    return res;
+}

@@ -6,7 +6,7 @@
 #include <mutex>
 #include <event2/event.h>
 
-#include "concurrentqueue.hpp"
+#include "blockingconcurrentqueue.hpp"
 
 #include "EventLoop.hpp"
 #include "Task.hpp"
@@ -17,7 +17,7 @@ class TasksController {
     EventLoop<TasksController>& haveNoDataEvents;
     std::shared_ptr<std::mutex> haveNoDataMutex;
 
-    moodycamel::ConcurrentQueue<Task>& haveData;
+    moodycamel::BlockingConcurrentQueue<Task>& haveData;
 
     bool ReceiveInput(int sd);
     void MoveTask(int sd);
@@ -27,7 +27,7 @@ class TasksController {
     TasksController(std::map<int, Task>& haveNoData,
                     EventLoop<TasksController>& haveNoDataEvents,
                     std::shared_ptr<std::mutex> haveNoDataMutex,
-                    moodycamel::ConcurrentQueue<Task>& haveData);
+                    moodycamel::BlockingConcurrentQueue<Task>& haveData);
 
     ~TasksController();
 

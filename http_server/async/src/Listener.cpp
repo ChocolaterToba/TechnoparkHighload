@@ -2,14 +2,14 @@
 #include <thread>
 #include <event2/event.h>
 
-#include "concurrentqueue.hpp"
+#include "blockingconcurrentqueue.hpp"
 
 #include "socket.hpp"
 #include "HTTPClient.hpp"
 #include "Listener.hpp"
 
 Listener::Listener(int port,
-                   moodycamel::ConcurrentQueue<HTTPClient>& unprocessedClients) :
+                   moodycamel::BlockingConcurrentQueue<HTTPClient>& unprocessedClients) :
           socket(), 
           unprocessedClients(unprocessedClients),
           stop(true) {
