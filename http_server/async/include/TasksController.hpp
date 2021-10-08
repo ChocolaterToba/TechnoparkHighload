@@ -18,6 +18,7 @@ class TasksController {
     std::shared_ptr<std::mutex> haveNoDataMutex;
 
     moodycamel::BlockingConcurrentQueue<Task>& haveData;
+    moodycamel::ProducerToken haveDataToken;
 
     bool ReceiveInput(int sd);
     void MoveTask(int sd);

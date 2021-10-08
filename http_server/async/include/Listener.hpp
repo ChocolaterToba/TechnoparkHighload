@@ -12,6 +12,7 @@ class Listener {
  private:
     Socket socket;
     moodycamel::BlockingConcurrentQueue<HTTPClient>& unprocessedClients;
+    moodycamel::ProducerToken unprocessedClientsToken;
 
     bool stop;
 

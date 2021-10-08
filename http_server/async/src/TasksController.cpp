@@ -23,7 +23,8 @@ TasksController::TasksController(std::map<int, Task>& haveNoData,
     haveNoData(haveNoData),
     haveNoDataEvents(haveNoDataEvents),
     haveNoDataMutex(haveNoDataMutex),
-    haveData(haveData) {}
+    haveData(haveData),
+    haveDataToken(haveData) {}
 
 TasksController::~TasksController() {
     Stop();
@@ -90,7 +91,7 @@ void TasksController::MoveTask(int sd) {
     haveNoData.erase(sd);
     haveNoDataMutex->unlock();
 
-    haveData.enqueue(std::move(task));
+    haveData.enqueue(haveDataToken, std::move(task));
 }
 
 void TasksController::TimeoutTaskRemove(int sd) {

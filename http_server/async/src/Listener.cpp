@@ -12,12 +12,14 @@ Listener::Listener(int port,
                    moodycamel::BlockingConcurrentQueue<HTTPClient>& unprocessedClients) :
           socket(), 
           unprocessedClients(unprocessedClients),
+          unprocessedClientsToken(unprocessedClients),
           stop(true) {
     socket.createServerSocket(port, 5);
 }
 
 Listener::Listener(Listener&& other) :
     unprocessedClients(other.unprocessedClients),
+    unprocessedClientsToken(std::move(other.unprocessedClientsToken)),
     stop(true) {
     other.Stop();
     socket = std::move(other.socket);
@@ -28,6 +30,7 @@ Listener& Listener::operator=(Listener&& other) {
     other.Stop();
     socket = std::move(other.socket);
     unprocessedClients = std::move(other.unprocessedClients);
+    unprocessedClientsToken = std::move(other.unprocessedClientsToken);
     return *this;
 }
 
@@ -45,7 +48,7 @@ void Listener::Start() {
 void Listener::Loop() {
     while (!stop) {
         HTTPClient client(socket.accept());
-        unprocessedClients.enqueue(std::move(client));
+        unprocessedClients.enqueue(unprocessedClientsToken, std::move(client));
     }
 }
 
