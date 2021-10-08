@@ -3,6 +3,8 @@
 #include <queue>
 #include <map>
 
+#include <iostream>
+
 #include "msleep.hpp"
 
 #include "socket.hpp"
@@ -50,6 +52,8 @@ Master::Master(std::map<std::string, int>& ports, size_t workersAmount):
                     "Master constructor: cannot construct master with no workers"
                 ));
             }
+
+            std::cout << "Creating " << workersAmount << " workers" << std::endl;
             for (size_t i = 0; i < workersAmount; ++i) {
                 workers.emplace_back(haveData, haveDataMutex);
             }

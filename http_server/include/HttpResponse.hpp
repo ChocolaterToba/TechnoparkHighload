@@ -20,12 +20,12 @@ class HttpResponse {
                  const std::string& returnCode,
                  bool keepAlive,
                  const std::string& contentLength,
-                 const std::vector<char>& body);
+                 const std::shared_ptr<std::vector<char>> body);
 
     HttpResponse() = delete;
     std::string GetHTTPVersion() const;
     std::string GetHeader() const;
-    std::vector<char> GetData() const;
+    std::shared_ptr<std::vector<char>> GetData() const;
 
     static ContentType GetContentType(const std::string& url);
 
@@ -38,10 +38,9 @@ class HttpResponse {
     std::map<std::string, std::string> headers;
     std::string response_header;
     size_t contentLength;
-    std::vector<char> response_body;
-    std::vector<char> response;
+    std::shared_ptr<std::vector<char>> response_body;
+    std::shared_ptr<std::vector<char>> response;
 
-    void SetResponseBody(const std::vector<char>& body);
     void SetContentType(ContentType type);
     void FormResponseHeader();
     void FormResponseData();

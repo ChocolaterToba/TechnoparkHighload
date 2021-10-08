@@ -7,14 +7,14 @@
 #include <mutex>
 #include "HTTPClient.hpp"
 
-typedef std::function<void(std::map<std::string, std::string>&, std::vector<char>&,
+typedef std::function<void(std::map<std::string, std::string>&, std::shared_ptr<std::vector<char>>,
                            HTTPClient&, HTTPClient&)> MainFuncType;
 typedef std::function<MainFuncType
                       (std::map<std::string, std::string>&,
-                       std::vector<char>&,
+                       std::shared_ptr<std::vector<char>>,
                        HTTPClient&)> PreFuncType;
 typedef std::function<void(std::map<std::string, std::string>&,
-                           std::vector<char>&,
+                           std::shared_ptr<std::vector<char>>,
                            HTTPClient&)> PostFuncType;
 
 class Task {

@@ -27,7 +27,7 @@ class Worker {
     WorkerStates state;
 
     std::map<std::string, std::string> headers;
-    std::vector<char> data;
+    std::shared_ptr<std::vector<char>> body;
 
     std::thread workerThread;
     bool stop;

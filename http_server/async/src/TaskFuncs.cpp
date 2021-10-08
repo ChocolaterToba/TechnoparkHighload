@@ -17,7 +17,7 @@ using std::map;
 using std::vector;
 
 
-MainFuncType PreProcess(map<string, string>& headers, vector<char>& body, HTTPClient& input) {
+MainFuncType PreProcess(map<string, string>& headers, std::shared_ptr<vector<char>> body, HTTPClient& input) {
     HttpRequest request(input.GetHeader());
     headers = request.GetAllHeaders();
     headers["url"] = request.GetURL();
@@ -29,7 +29,7 @@ MainFuncType PreProcess(map<string, string>& headers, vector<char>& body, HTTPCl
     return MainProcessBasic;
 }
 
-int ReadFile(const std::string& filename, vector<char>& body, bool actuallyRead) {
+int ReadFile(const std::string& filename, std::shared_ptr<vector<char>> body, bool actuallyRead) {
     std::ifstream file;
     file.open(filename, std::ios::in | std::ios :: binary);
 
@@ -44,14 +44,14 @@ int ReadFile(const std::string& filename, vector<char>& body, bool actuallyRead)
         return fileSize;
     }
 
-    body.resize(fileSize);
+    body->resize(fileSize);
 
     file.seekg(0, std::ios_base::beg);
-    file.read(&body[0], fileSize);
+    file.read(body->data(), fileSize);
     return fileSize;
 }
 
-void MainProcessBasic(map<string, string>& headers, vector<char>& body,
+void MainProcessBasic(map<string, string>& headers, std::shared_ptr<vector<char>> body,
                       HTTPClient& input, HTTPClient& output) {
     if (headers["method"] != "GET" && headers["method"] != "HEAD") {
         headers["return_code"] = "405 Method Not Allowed";
@@ -95,7 +95,7 @@ void MainProcessBasic(map<string, string>& headers, vector<char>& body,
     output = std::move(input);
 }
 
-void PostProcess(map<string, string>& headers, vector<char>& body, HTTPClient& output) {
+void PostProcess(map<string, string>& headers, std::shared_ptr<vector<char>> body, HTTPClient& output) {
     HttpResponse response(headers["http_version"],
                           HttpRequest::StringToRequestMethod(headers["method"]),
                           headers["url"],

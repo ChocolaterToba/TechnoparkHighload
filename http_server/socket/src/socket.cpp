@@ -166,13 +166,13 @@ void Socket::send(const std::string& str) {
     }
 }
 
-void Socket::send(const std::vector<char>& str) {
-    size_t left = str.size();
+void Socket::send(std::shared_ptr<std::vector<char>> data) {
+    size_t left = data->size();
     ssize_t sent = 0;
     // int flags = MSG_DONTWAIT;
     int flags = MSG_NOSIGNAL;
     while (left > 0) {
-        sent = ::send(m_Sd, str.data() + sent, str.size() - sent, flags);
+        sent = ::send(m_Sd, data->data() + sent, data->size() - sent, flags);
         if (-1 == sent) {
             throw std::runtime_error("write failed: " + std::string(strerror(errno)));
         }

@@ -15,6 +15,7 @@ Worker::Worker(std::queue<Task>& tasks,
         tasks(tasks),
         tasksMutex(tasksMutex),
         state(NoTask),
+        body(std::make_shared<std::vector<char>>()),
         stop(true) {}
 
 Worker::Worker(Worker&& other) :
@@ -64,7 +65,7 @@ void Worker::TakeNewTask() {
 void Worker::RunPreFunc() {
     if (state == TaskReceived) {
         state = PreFuncRunning;
-        currentTask.SetMainFunc(currentTask.GetPreFunc()(headers, data, currentTask.GetInput()));
+        currentTask.SetMainFunc(currentTask.GetPreFunc()(headers, body, currentTask.GetInput()));
         state = PreFuncRan;
     } else {
         throw std::runtime_error(std::string(
@@ -74,7 +75,7 @@ void Worker::RunPreFunc() {
 void Worker::RunMainFunc() {
     if (state == PreFuncRan) {
         state = MainFuncRunning;
-        currentTask.GetMainFunc()(headers, data,
+        currentTask.GetMainFunc()(headers, body,
                                   currentTask.GetInput(),
                                   currentTask.GetOutput());
         state = MainFuncRan;
@@ -86,7 +87,7 @@ void Worker::RunMainFunc() {
 void Worker::RunPostFunc() {
     if (state == MainFuncRan) {
         state = PostFuncRunning;
-        currentTask.GetPostFunc()(headers, data, currentTask.GetOutput());
+        currentTask.GetPostFunc()(headers, body, currentTask.GetOutput());
         state = NoTask;
     } else {
         throw std::runtime_error(std::string(
@@ -118,6 +119,6 @@ void Worker::Stop() {
         state = NoTask;
 
         headers.clear();
-        data.clear();
+        body->clear();
     }
 }

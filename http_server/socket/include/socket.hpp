@@ -33,7 +33,7 @@ class Socket {
                  int timeout);
 
     void send(const std::string& s);
-    void send(const std::vector<char>& s);
+    void send(std::shared_ptr<std::vector<char>> s);
 
     bool hasData();
 

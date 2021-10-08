@@ -11,7 +11,7 @@
 class HTTPClient {
  private:
     std::string header;
-    std::vector<char> body;
+    std::shared_ptr<std::vector<char>> body;
 
     std::shared_ptr<Socket> socket;
 
@@ -27,7 +27,7 @@ class HTTPClient {
     HTTPClient(std::shared_ptr<Socket> socket = std::make_shared<Socket>());
 
     std::string GetHeader() const { return header; }
-    std::vector<char> GetBody() const { return body; }
+    std::shared_ptr<std::vector<char>> GetBody() const { return body; }
     std::queue<std::string> GetBodyQueue(const std::string& separator = "|") const;
 
     static std::queue<std::string> SplitVectorToQueue(const std::vector<char>& origin, const std::string& separator = "|");
@@ -44,7 +44,7 @@ class HTTPClient {
                                               const std::string& pairSeparator = ": ");
 
     void SetHeader(std::string header) { this->header = std::move(header); }
-    void SetBody(std::vector<char> body) { this->body = std::move(body); }
+    void SetBody(std::vector<char> body) { this->body = std::make_shared<std::vector<char>>(body); }
     void SetBody(std::queue<std::string>& bodyQueue, const std::string& separator = "|");
     void SetContentLength(size_t contentLength) { this->contentLength = contentLength; }
 
@@ -55,7 +55,7 @@ class HTTPClient {
     bool RecvBodyAsync();
 
     void Send(bool close = false);
-    void Send(std::vector<char> data, bool close = false);
+    void Send(std::shared_ptr<std::vector<char>> data, bool close = false);
 
     bool HasData() const { return socket->hasData(); }
     bool ReceivedHeader();

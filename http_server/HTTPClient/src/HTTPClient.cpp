@@ -24,6 +24,7 @@ HTTPClient::HTTPClient(const std::string& host, int port) : HTTPClient() {
 }
 
 HTTPClient::HTTPClient(std::shared_ptr<Socket> socket) :
+            body(std::make_shared<std::vector<char>>()),
             socket(socket),
             receivedHeader(false),
             contentLength(0) {}
@@ -37,22 +38,22 @@ std::vector<char>::iterator HTTPClient::ParseBuffer(std::vector<char>& buffer, s
 }
 
 void HTTPClient::SetBody(std::queue<std::string>& bodyQueue, const std::string& separator) {
-    body.clear();
+    body->clear();
     for (size_t i = 0; i < bodyQueue.size(); ++i) {
         std::string& str = bodyQueue.front();
-        std::copy(str.begin(), str.end(), std::back_inserter(body));
+        std::copy(str.begin(), str.end(), std::back_inserter(*body));
         bodyQueue.pop();
         bodyQueue.push(str);
         if (i < bodyQueue.size() - 1) {
             for (auto& character : separator) {
-                body.push_back(character);
+                body->push_back(character);
             }
         }
     }
 }
 
 std::queue<std::string> HTTPClient::GetBodyQueue(const std::string& separator) const {
-    return SplitVectorToQueue(body, separator);
+    return SplitVectorToQueue(*body, separator);
 }
 
 std::queue<std::string> HTTPClient::SplitVectorToQueue(const std::vector<char>& origin, const std::string& separator) {
@@ -146,7 +147,7 @@ std::vector<char> HTTPClient::MergeMapToVector(std::map<std::string, std::string
 
 void HTTPClient::RecvHeader() {
     header.clear();
-    body.clear();
+    body->clear();
     std::string result;
     std::vector<char> buffer;
 
@@ -158,7 +159,7 @@ void HTTPClient::RecvHeader() {
         auto endlineIter = ParseBuffer(buffer, result);
         if (endlineIter != buffer.end()) {  // if '\0' was in buffer
             binaryBodyStarted = true;
-            body.insert(body.begin(), endlineIter, buffer.end());
+            body->insert(body->begin(), endlineIter, buffer.end());
             break;
         }
     }
@@ -178,16 +179,19 @@ void HTTPClient::RecvHeader() {
     // std::cerr <<"Received header, size: " << header.size() << " bytes:" << std::endl
     //           << header << std::endl;
 
-    std::vector<char> temp(result.begin() + bodyStartIndex + shift, result.end());
+    std::shared_ptr<std::vector<char>> temp = std::make_shared<std::vector<char>>(
+        result.begin() + bodyStartIndex + shift, result.end()
+    );
     if (binaryBodyStarted) {
-        temp.insert(temp.end(), body.begin(), body.end());
+        temp->insert(temp->end(), body->begin(), body->end());
     }
-    body = std::move(temp);
+
+    body = temp;
 }
 
 void HTTPClient::RecvBody() {
-    std::vector<char> receivedBody = std::move(socket->recvVector(contentLength - body.size()));
-    body.insert(body.end(), receivedBody.begin(), receivedBody.end());
+    std::vector<char> receivedBody = std::move(socket->recvVector(contentLength - body->size()));
+    body->insert(body->end(), receivedBody.begin(), receivedBody.end());
 
     // std::cerr << "Received body, size: " << body.size() << " bytes" << std::endl;
 }
@@ -199,10 +203,10 @@ void HTTPClient::RecvHeaderAsync() {
     bool binaryBodyStarted = false;
     buffer = std::move(socket->recvVector());
 
-    auto endlineIter = ParseBuffer(buffer, result);
+    auto endlineIter = ParseBuffer(buffer, result); // Put buffer till '\0' in result, return '\0's position
     if (endlineIter != buffer.end()) {  // if '\0' was in buffer
         binaryBodyStarted = true;
-        body.insert(body.begin(), endlineIter, buffer.end());
+        body->insert(body->begin(), endlineIter, buffer.end());  // inserting buffer starting with '\0' in body
     }
 
     size_t bodyStartIndex = result.find("\r\n\r\n");
@@ -222,24 +226,27 @@ void HTTPClient::RecvHeaderAsync() {
 
     // std::cerr <<"Received header's part, size: " << header.size() << " bytes:" << std::endl;
 
-    std::vector<char> temp(result.begin() + bodyStartIndex + shift, result.end());
+    std::shared_ptr<std::vector<char>> temp = std::make_shared<std::vector<char>>(
+        result.begin() + bodyStartIndex + shift, result.end()
+    );
     if (binaryBodyStarted) {
-        temp.insert(temp.end(), body.begin(), body.end());
+        temp->insert(temp->end(), body->begin(), body->end());  // Appending body since first '\0' to the rest of it
     }
-    body = std::move(temp);
+
+    body = temp;
 }
 
 bool HTTPClient::RecvBodyAsync() {
     // Returns true if body is read successfully
-    if (body.size() >= contentLength) {  // maybe rework?
+    if (body->size() >= contentLength) {
         return true;
     }
 
-    std::vector<char> receivedBody = std::move(socket->recvVectorMax(contentLength - body.size()));
-    body.insert(body.end(), receivedBody.begin(), receivedBody.end());
+    std::vector<char> receivedBody = std::move(socket->recvVectorMax(contentLength - body->size()));
+    body->insert(body->end(), receivedBody.begin(), receivedBody.end());
 
     // std::cerr << "Received body, size: " << body.size() << " bytes" << std::endl;
-    return body.size() == contentLength;
+    return body->size() == contentLength;
 }
 
 bool HTTPClient::ReceivedHeader() {
@@ -254,9 +261,9 @@ void HTTPClient::Send(bool close) {
     }
 }
 
-void HTTPClient::Send(std::vector<char> data, bool close) {
+void HTTPClient::Send(std::shared_ptr<std::vector<char>> data, bool close) {
     try {
-        socket->send(std::move(data));
+        socket->send(data);
     } catch (const std::exception &e) {
         // do nothing
     }
@@ -282,7 +289,7 @@ int HTTPClient::GetSd() const {
 
 void HTTPClient::Clear() {
     header.clear();
-    body.clear();
+    body->clear();
 }
 
 void HTTPClient::Close() {

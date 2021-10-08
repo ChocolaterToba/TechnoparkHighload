@@ -24,7 +24,7 @@ std::string HttpResponse::GetHTTPVersion() const {
 std::string HttpResponse::GetHeader() const {
     return response_header;
 }
-std::vector<char> HttpResponse::GetData() const {
+std::shared_ptr<std::vector<char>> HttpResponse::GetData() const {
     return response;
 }
 
@@ -34,17 +34,18 @@ HttpResponse::HttpResponse(const std::string& HTTPVersion,
                            const std::string& returnCode,
                            bool keepAlive,
                            const std::string& contentLength,
-                           const std::vector<char>& body) :
+                           const std::shared_ptr<std::vector<char>> body) :
               http_version(HTTPVersion),
               url(url),
               return_code(returnCode),
               keep_alive(keepAlive),
-              contentLength(std::stoi(contentLength)) {
+              contentLength(std::stoi(contentLength)),
+              response_body(body),
+              response(std::make_shared<std::vector<char>>()) {
     if (HTTPVersion.empty()) {
         http_version = "0.9";
         if (reqType == GET) {
-            SetResponseBody(body);
-            response.insert(response.begin(), response_body.begin(), response_body.end());
+            response->insert(response->begin(), response_body->begin(), response_body->end());
             return;
         } else {
             throw OldVersionException();
@@ -52,7 +53,6 @@ HttpResponse::HttpResponse(const std::string& HTTPVersion,
     }
 
     FormResponseHeader();
-    SetResponseBody(body);
     FormResponseData();
 }
 
@@ -89,11 +89,6 @@ ContentType HttpResponse::GetContentType(const std::string& url) {
         default:
             return UNDEF;
     }
-}
-
-void HttpResponse::SetResponseBody(const std::vector<char>& body) {
-    response_body.clear();
-    response_body.insert(response_body.end(), body.begin(), body.end());
 }
 
 void HttpResponse::SetContentType(ContentType type) {
@@ -143,8 +138,8 @@ void HttpResponse::FormResponseHeader() {
         headers.insert(std::pair<std::string, std::string>("Connection", "close"));
     }
 
-    if (!response_body.empty()) {
-        headers.insert(std::pair<std::string, std::string>("Content-Length", std::to_string(response_body.size())));
+    if (!response_body->empty()) {
+        headers.insert(std::pair<std::string, std::string>("Content-Length", std::to_string(response_body->size())));
     }
 
     headers.insert(std::pair<std::string, std::string>("Server", "My cool async server lol"));
@@ -167,6 +162,6 @@ void HttpResponse::FormResponseHeader() {
 }
 
 void HttpResponse::FormResponseData() {
-    response.assign(response_header.begin(), response_header.end());
-    response.insert(response.end(), response_body.begin(), response_body.end());
+    response->assign(response_header.begin(), response_header.end());
+    response->insert(response->end(), response_body->begin(), response_body->end());
 }
