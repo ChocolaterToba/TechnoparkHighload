@@ -78,8 +78,8 @@ class EventLoop {
         eventLoopRunningMutex.lock();
         event_add(ev, &timeout);
 
-        eventLoopRunningMutex.unlock();
         addEventRunningMutex.unlock();
+        eventLoopRunningMutex.unlock();
     }
     void FreeEvent(event* ev) {
         // baseMutex.lock(); // Not needed - this function should only be used in callback, which is called by RunLoop

@@ -15,6 +15,7 @@
 class TaskBuilder {
  protected:
     moodycamel::BlockingConcurrentQueue<HTTPClient>& unprocessedClients;
+    moodycamel::ConsumerToken unprocessedClientsToken;
 
     std::map<int, Task>& haveNoData;
     EventLoop<TasksController>& haveNoDataEvents;

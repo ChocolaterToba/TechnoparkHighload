@@ -23,6 +23,7 @@ typedef enum {
 class Worker {
  private:
     moodycamel::BlockingConcurrentQueue<Task>& tasks;
+    moodycamel::ConsumerToken tasksToken;
     Task currentTask;
     WorkerStates state;
 

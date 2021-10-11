@@ -11,6 +11,7 @@
 
 Worker::Worker(moodycamel::BlockingConcurrentQueue<Task>& tasks) :
         tasks(tasks),
+        tasksToken(tasks),
         state(NoTask),
         body(std::make_shared<std::vector<char>>()),
         stop(true) {}
@@ -36,7 +37,7 @@ Worker::~Worker() {
 void Worker::TakeNewTask() {
     if (state == NoTask) {
         while (!stop) {
-            if (tasks.wait_dequeue_timed(currentTask, std::chrono::milliseconds(100))) {  // timer only really matters when stopping builder
+            if (tasks.wait_dequeue_timed(tasksToken, currentTask, std::chrono::milliseconds(100))) {  // timer only really matters when stopping builder
                 state = TaskReceived;
                 break;
             }

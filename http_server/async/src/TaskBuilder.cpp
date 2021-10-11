@@ -16,6 +16,7 @@ TaskBuilder::TaskBuilder(moodycamel::BlockingConcurrentQueue<HTTPClient>& unproc
                          EventLoop<TasksController>& haveNoDataEvents,
                          std::shared_ptr<std::mutex> haveNoDataMutex) :
     unprocessedClients(unprocessedClients),
+    unprocessedClientsToken(unprocessedClients),
     haveNoData(haveNoData),
     haveNoDataEvents(haveNoDataEvents),
     haveNoDataMutex(haveNoDataMutex),
@@ -28,7 +29,9 @@ TaskBuilder::~TaskBuilder() {
 void TaskBuilder::CreateTasks() {
     while (!stop) {
         HTTPClient newClient;
-        if (unprocessedClients.wait_dequeue_timed(newClient, std::chrono::milliseconds(100)))  {  // timer only really matters when stopping builder
+        if (unprocessedClients.wait_dequeue_timed(
+                unprocessedClientsToken, newClient, std::chrono::milliseconds(100)
+            ))  {  // timer only really matters when stopping builder
             haveNoDataMutex->lock();
             haveNoData.emplace(newClient.GetSd(), Task(newClient));
             haveNoDataMutex->unlock();

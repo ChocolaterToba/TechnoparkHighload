@@ -1,7 +1,6 @@
 #include <memory>
 #include <vector>
 #include <map>
-
 #include <iostream>
 
 #include "msleep.hpp"
@@ -16,6 +15,8 @@
 #include "Listener.hpp"
 #include "Master.hpp"
 
+const size_t EXPECTED_MAX_HANGING_TASKS = 10000;
+
 Master::Master(std::map<std::string, int>& ports, size_t workersAmount):
         ports(ports),
 
@@ -27,7 +28,7 @@ Master::Master(std::map<std::string, int>& ports, size_t workersAmount):
 
         builder(unprocessedClients, haveNoData, haveNoDataEvents, haveNoDataMutex),
 
-        haveData(),
+        haveData(EXPECTED_MAX_HANGING_TASKS, 1, 0),  // Pre-allocationg 10000 elements in queue
 
         controller(haveNoData, haveNoDataEvents, haveNoDataMutex, haveData),
 
