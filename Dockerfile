@@ -47,7 +47,7 @@ RUN cmake ../src -DENABLE_TESTING=ON && \
 # В качестве базового образа используем gcc:latest
 FROM gcc:latest
 
-RUN apt-get update && apt-get install -y valgrind
+# RUN apt-get update && apt-get install -y valgrind
 
 # Добавим пользователя, потому как в Docker по умолчанию используется root
 # Запускать незнакомое приложение под root'ом неприлично :)
@@ -61,4 +61,4 @@ WORKDIR /app
 COPY --from=build /app/build/result .
 
 # Установим точку входа
-CMD ["valgrind", "./server"]
+CMD ["./server"]

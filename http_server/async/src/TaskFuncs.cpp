@@ -68,15 +68,23 @@ void MainProcessBasic(map<string, string>& headers, std::shared_ptr<vector<char>
         return;
     }
 
+    std::string path;
+    std::string filename;
+
     size_t queryStartPos = headers["url"].find('?');
     size_t finalDotPos = headers["url"].rfind('.', queryStartPos);
-    size_t finalSlashPos = headers["url"].rfind('/', finalDotPos);
-    std::string filename = headers["url"].substr(finalSlashPos + 1, queryStartPos - finalSlashPos - 1);
-    std::string path = std::string(std::getenv("DOCUMENT_ROOT")) + "/" +
-        headers["url"].substr(1, finalSlashPos);
+    if (finalDotPos != std::string::npos) {
+        size_t finalSlashPos = headers["url"].rfind('/', finalDotPos);
+        filename = headers["url"].substr(finalSlashPos + 1, queryStartPos - finalSlashPos - 1);
+        path = std::string(std::getenv("DOCUMENT_ROOT")) + "/" +
+            headers["url"].substr(1, finalSlashPos);
 
-    if (filename == "") {
+        if (filename == "") {
+            filename = "index.html";
+        }
+    } else {
         filename = "index.html";
+        path = headers["url"];
     }
 
     int readBytesAmount = ReadFile(path + filename, body, headers["method"] == "GET");
