@@ -2,8 +2,12 @@
 #include <map>
 #include <string>
 #include <fstream>
+#include <algorithm>
+#include <iterator>
 
 #include "ports.hpp"
+#include "cache.hpp"
+#include "lfu_cache_policy.hpp"
 
 #include "HTTPClient.hpp"
 #include "HttpRequest.hpp"
@@ -29,26 +33,41 @@ MainFuncType PreProcess(map<string, string>& headers, std::shared_ptr<vector<cha
     return MainProcessBasic;
 }
 
+template <typename Key, typename Value>
+using lfu_cache_t = typename caches::fixed_sized_cache<Key, Value, caches::LFUCachePolicy>;
+lfu_cache_t<std::string, std::vector<char>> fileCache(32);
+
 int ReadFile(const std::string& filename, std::shared_ptr<vector<char>> body, bool actuallyRead) {
-    std::ifstream file;
-    file.open(filename, std::ios::in | std::ios :: binary);
+    try {
+        if (!actuallyRead) {
+            return fileCache.Get(filename).size();
+        }
 
-    if (file.eof() || file.fail()) {
-        return -1;
-    }
+        *body = fileCache.Get(filename);
+        return body->size();
 
-    file.seekg(0, std::ios_base::end);
-    std::streampos fileSize = file.tellg();
+    } catch (const std::range_error &e) {
+        std::ifstream file;
+        file.open(filename, std::ios::in | std::ios :: binary);
 
-    if (!actuallyRead) {
+        if (file.eof() || file.fail()) {
+            return -1;
+        }
+
+        file.seekg(0, std::ios_base::end);
+        std::streampos fileSize = file.tellg();
+
+        if (!actuallyRead) {
+            return fileSize;
+        }
+
+        body->resize(fileSize);
+
+        file.seekg(0, std::ios_base::beg);
+        file.read(body->data(), fileSize);
+        fileCache.Put(filename, *body);
         return fileSize;
     }
-
-    body->resize(fileSize);
-
-    file.seekg(0, std::ios_base::beg);
-    file.read(body->data(), fileSize);
-    return fileSize;
 }
 
 void MainProcessBasic(map<string, string>& headers, std::shared_ptr<vector<char>> body,
