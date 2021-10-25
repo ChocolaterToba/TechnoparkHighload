@@ -29,7 +29,10 @@ RUN apt-get update && \
 RUN apt-get install libevent-dev
 
 # Скопируем директорию /src в контейнер
-ADD . /app/src
+COPY http_server /app/src/http_server
+COPY linters /app/src/linters
+COPY CPPLINT.cfg /app/src
+COPY CMakeLists.txt /app/src
 
 # Установим рабочую директорию для сборки проекта
 WORKDIR /app/build
@@ -44,6 +47,8 @@ RUN cmake ../src -DENABLE_TESTING=ON && \
 # В качестве базового образа используем gcc:latest
 FROM gcc:latest
 
+RUN apt-get update && apt-get install -y valgrind
+
 # Добавим пользователя, потому как в Docker по умолчанию используется root
 # Запускать незнакомое приложение под root'ом неприлично :)
 RUN groupadd -r sample && useradd -r -g sample sample
@@ -56,4 +61,4 @@ WORKDIR /app
 COPY --from=build /app/build/result .
 
 # Установим точку входа
-CMD ["./server"]
+CMD ["valgrind", "./server"]
